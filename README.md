@@ -134,7 +134,7 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 Control genome (fasta, if -sc is chosen)<br>
 2. List(s) of CNVs overlapping with target regions (bed)<br>
 List(s) of CNVs outside of target regions (bed)<br>
-3. Target regions for generating short reads for test(s) and control (\*.target_regions_for_gen_short_reads.bed). These rearranged target regions are for read generation ONLY. If don't want to use Wessim, these can be used to extract target sequences and generate short reads by other read simulation tools like ART_illumina (custom codes will be required for this, see [SimulateCNVs v1.0](https://github.com/YJulyXing/SimulateCNVs) which used a custom script to utilize ART_illumina). For CNV calling, the original target region file in input (2) should be used.<br>
+3. Target regions for generating short reads for test(s) and control (\*.target_regions_for_gen_short_reads.bed). These rearranged target regions are for read generation ONLY. If don't want to use Wessim, these can be used to extract target sequences and generate short reads by other read simulation tools like ART_illumina (custom codes will be required for this, see [SimulateCNVs v1.0](https://github.com/YJulyXing/SimulateCNVs) which used a custom script to utilize ART_illumina). <strong>For CNV calling, the original target region file in input (2) should be used.</strong><br>
 4. Short reads for rearranged genome(s) (fastq, if -ssr is chosen)<br>
 Short reads for control genome (fastq, if -sc and -ssr is chosen)
 5. Indexes for the control genome (.dict, .fai, .sa, etc., if -ssr and -sb is chosen and no indexes exist in the output directory)
