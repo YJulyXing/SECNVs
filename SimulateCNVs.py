@@ -83,7 +83,7 @@ def main():
 		help='Maximum length bwtween target regions to connect the target regions.')
 	group3.add_argument('-m', dest='model', type=str, \
 		default=os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/ill100v5_p.gzip"), \
-		help='Absolute path for GemSim error model file (.gzip) [ill100v5_p]')
+		help='GemSim error model file (.gzip, need absolute path) [ill100v5_p]')
 
 	group4 = parser.add_argument_group('Arguments for general settings')
 	group4.add_argument('-o', dest='output_dir', type=str, default="simulation_output", \

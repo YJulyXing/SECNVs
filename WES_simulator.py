@@ -191,7 +191,6 @@ def write_cnv_genome(cnv_genome_file, chrs, seqs):
 	f.close()
 
 def call_wessim(genome, region, nreads, read_length, frag_size, stdev, model, output, qual, paired):
-	subprocess.call(['samtools','faidx',genome], stderr=None)
 	dirn = os.getcwd()
 	os.chdir(os.path.dirname(os.path.realpath(__file__)))
 	subprocess.call(['chmod', 'u=rwx', 'Wessim1.py'], stderr=None)

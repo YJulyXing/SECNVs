@@ -8,6 +8,7 @@ import numpy
 from time import time
 import argparse
 import math
+import subprocess
 
 inds={'A':0,'T':1,'G':2,'C':3,'N':4,'a':0,'t':1,'g':2,'c':3,'n':4}
 
@@ -245,6 +246,8 @@ def main(argv):
 	if paired:
 		wread2.close()
 
+	subprocess.call(['rm', '-f', faoutfile], stderr=None)
+	subprocess.call(['rm', '-f', abdoutfile], stderr=None)
 
 def pickonekey(matchkeys):
 	r = int(random.uniform(0, len(matchkeys)-1))
