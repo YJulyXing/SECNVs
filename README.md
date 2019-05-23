@@ -16,7 +16,7 @@ Bam file generation uses BWA, samtools and GATK.
 &#160;1) Only generate short reads at the start and end of each region, no reads generated in the middle of the regions.<br>
 &#160;2) Can't read in the first line of the bed file with no header.<br>
 &#160;3) The length of each region was 1 bp less than it should be.<br>
-* Also, after modification Wessim1 doesn't require the genome to be indexed by "faidx", and doesn't need python package "pysam".
+* Also, after modification Wessim1 doesn't require the genome to be indexed by "faidx", doesn't need python package "pysam", and the intermediate files can now be deleted automatically.
 
 ## Installation
 No installation required. Simply type the following and it will be ready to use:
@@ -104,10 +104,10 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -fs FRAG_SIZE | 200 | Mean fragment size to be generated | - |
 | -s STDEV | 20 | Standard deviation of fragment sizes | - |
 | -l READ_LENGTH | 100 | Read length of each short read | - |
-| -tf TARGET_REGION_FLANK | 0 | Length of flanking region up and down stream of target regions to be sequenced | -tf takes place after -clr (target regions are first connected per request of the user, and then flanking regions up and down stream of target regions are included for sequencing). |
+| -tf TARGET_REGION_FLANK | 0 | Length of flanking region up and down stream of target regions to be sequenced | -tf takes place after -clr (target regions are first connected per request of the user, and then flanking regions up and down stream of target regions are included for sequencing). It is recommended to use -tf and -clr if target regions are very small and fragment size and read length are relatively large. |
 | -pr | - | Select if paired-end sequencing | For paired-end sequencing, must use the option -pr. If using single-end sequencing, mean fragment size (-fs) and standard deviation of fragment size (-s) will be ignored. |
 | -q QUALITY_SCORE_OFFSET | 33 | Quality score offset for short reads simulation | - |
-| -clr CONNECT_LEN_BETWEEN_REGIONS | - | Maximum length bwtween target regions to connect the target regions | -tf takes place after -clr (target regions are first connected per request of the user, and then flanking regions up and down stream of target regions are included for sequencing). |
+| -clr CONNECT_LEN_BETWEEN_REGIONS | - | Maximum length bwtween target regions to connect the target regions | -tf takes place after -clr (target regions are first connected per request of the user, and then flanking regions up and down stream of target regions are included for sequencing). It is recommended to use -tf and -clr if target regions are very small and fragment size and read length are relatively large. |
 | -m MODEL | ill100v5_p | GemSim error model file (.gzip, need absolute path) | - |
 
 #### Arguments for general settings:
