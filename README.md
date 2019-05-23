@@ -1,1 +1,1 @@
-# SECNVs-SimulateCNVs-2.0-
+# SECNVs (SimulateCNVs 2.0)
