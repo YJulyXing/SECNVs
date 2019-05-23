@@ -12,7 +12,7 @@ Short read simulation is based on the modified script of Wessim.
 Bam file generation uses BWA, samtools and GATK.
 
 ## Version 2.0 Update
-* Use a modified script of Wessim1 instead of ART_illumina to simulate short reads. This enables GC filtration in the step of short read generation. The modification of Wessim's script fixed the following issues in Wessim1:
+* Use a modified script of Wessim1 instead of ART_illumina to simulate short reads. This enables GC filtration in the step of short read generation. The modification of Wessim's script fixed the following issues in Wessim1:<br>
 &#160;1) Only generate short reads at the start and end of each region, no reads generated in the middle of the regions.<br>
 &#160;2) Can't read in the first line of the bed file with no header.<br>
 &#160;3) The length of each region was 1 bp less than it should be.<br>
