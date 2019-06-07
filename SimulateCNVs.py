@@ -61,8 +61,14 @@ def main():
 		help='Minimum length between each CNV [50]')	
 	group2.add_argument('-ms', dest='method_s', choices=['random','uniform','gauss'], default="random", \
 		help='Distribution of CNVs [random]')
-	group2.add_argument('-ml', dest='method_l', choices=['random','uniform','gauss','user'], default="random", \
+	group2.add_argument('-ml', dest='method_l', choices=['random','uniform','gauss','beta','user'], default="random", \
 		help='Distribution of CNV length [random]')
+	group2.add_argument('-a', dest='a', type=float, default=None, \
+		help='alpha')
+	group2.add_argument('-b', dest='b', type=float, default=None, \
+		help='beta')
+	group2.add_argument('-r', dest='rate', type=float, default=0, \
+		help='Rate of SNPs [0]')
 	
 	group3 = parser.add_argument_group('Arguments for simulating short reads (fastq)')
 	group3.add_argument('-nr', dest='nreads', type=int, default=10000, \
@@ -152,11 +158,41 @@ def main():
 	param['flank'] = args.min_flanking_len
 	param['fl'] = args.target_region_flank
 	param['inter'] = args.connect_len_between_regions
+	params['rate'] = args.rate
+	params['a'] = args.a
+	params['b'] = args.b
 
 	t = args.num_samples
 	if t < 1:
 		log_print("Error: The number of test samples (-n) must be at least 1!")
 		exit(1)
+
+	if (params['rate'] < 0) or (params['rate'] > 1):
+		log_print("Error: SNP rate must be between 0 and 1.")
+		exit(1)
+
+	if (param['method_l'] == 'gauss') or (param['method_s'] == 'gauss'):
+		if not param['a']:
+			param['a'] = 0
+		if not param['b']:
+			param['b'] = 1
+
+	if (param['method_l'] == 'beta'):
+		if not param['a']:
+			param['a'] = 2
+		if not param['b']:
+			param['b'] = 2
+		if (param['a']) and (param['a'] <= 0):
+			log_print("Error: alpha must > 0 for beta distribution.")
+			exit(1)
+		if (param['b']) and (param['b'] <= 0):
+			log_print("Error: beta must > 0 for beta distribution.")
+			exit(1)
+
+	if (param['method_l'] != 'gauss') and (param['method_s'] != 'gauss') \
+	and (param['method_l'] != 'beta'):
+		if param['a'] or param['b']:
+			log_print("Warning: parameters alpha and beta are not used! (Only used in gauss and beta distribution.)")
 
 	if param['sim_bam']:
 		if (not param['path_to_picard']) or (not param['path_to_GATK']):
@@ -231,7 +267,7 @@ def main():
 	sys.stdout.flush()
 	print '                      SimulateCNVs (2019)                     '
 	sys.stdout.flush()
-	print '                     Version 2  (May 2019)                    '
+	print '                     Version 2.1  (May 2019)                    '
 	sys.stdout.flush()
 	print '        Bug report: Yue Xing <yue.july.xing@gmail.com>        '
 	sys.stdout.flush()

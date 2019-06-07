@@ -505,13 +505,13 @@ def readGenp(inter, ref, refLen, readLen1, readLen2, genos, mx1, insD1, delD1, g
 	"""Generates a pair of reads from given DNA fragment."""
 	cRef = comp(ref)
 	if inter < refLen:
-		st_in = refLen-inter
+		st_in = refLen-inter+1
 		st1 = int(random.uniform(0, st_in))
-		st2 = st1+inter-1
+		st2 = st1+inter
 		end1 = st1+readLen1
 		end2 = st2-readLen2
 		read1 = ref[st1:end1]
-		read2 = cRef[(end2+1):(st2+1)][::-1]
+		read2 = cRef[end2:st2][::-1]
 	else:
 		st1 = 0
 		st2 = refLen

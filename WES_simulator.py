@@ -135,15 +135,31 @@ def find_missing(m_opt, m_chrs, m_seqs):
 					ms[ch].append(pos)
 	return ms
 
-def find_gauss(g_lg=None, g_cnv_min_len=None, g_cnv_max_len=None):
+def make_snps(n_seqs,chrs,rate):
+	seqs = dict(n_seqs)
+	for ch in chrs: 
+		ln = len(seqs[ch])
+		n = int(ln*rate)
+		snploc = random.sample(range(0, ln), n)
+		for i in snploc:
+			t=random.randint(0,(len(list[seqs[ch][i]])-1))
+			seqs[ch] = seqs[ch][:i] + list[seqs[ch][i]][t] + seqs[ch][(i+1):]
+	return(seqs)
+
+def find_gauss(g_lg=None, g_cnv_min_len=None, g_cnv_max_len=None, alpha=None, beta=None):
 	s = -10
-	while s<-4 or s>4:
-		s = random.gauss(0,1)
+	while s<-5 or s>5:
+		s = random.gauss(alpha,beta)
 	if g_lg:
-		fg = int(0 + (s+4)/8 * (g_lg-1))
+		fg = int(0 + (s+5)/10 * (g_lg-1))
 	elif g_cnv_min_len and g_cnv_max_len:
-		fg = int((s+4)/8 * (g_cnv_max_len-g_cnv_min_len) + g_cnv_min_len)
+		fg = int((s+5)/10 * (g_cnv_max_len-g_cnv_min_len) + g_cnv_min_len)
 	return fg
+
+def find_beta(alpha,beta,g_cnv_min_len,g_cnv_max_len):
+	n = random.betavariate(alhpa, beta)
+	clen = int(n*(g_cnv_max_len-g_cnv_min_len)) + g_cnv_min_len
+	return(clen)
 
 def assign_copy_numbers(chrs, tl, p_ins, min_cn, max_cn, cnv_list_st):
 	copy_num = []
@@ -252,14 +268,16 @@ def assign_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 			elif method_s == 'uniform':
 				cnv_st = int(random.uniform(0,lg-1))
 			else:
-				cnv_st = find_gauss(lg)
+				cnv_st = find_gauss(lg,None,None,in_alpha,in_beta)
 
 			if method_l == 'random':
 				cnv_ed = cnv_st + random.randint(cnv_min_len,cnv_max_len) - 1
 			elif method_l == 'uniform':
 				cnv_ed = cnv_st + int(random.uniform(cnv_min_len,cnv_max_len)) - 1
 			elif method_l == 'gauss':
-				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len) - 1
+				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len,in_alpha,in_beta) - 1
+			elif method_l == 'beta':
+				cnv_ed = cnv_st + find_beta(in_alpha,in_beta,cnv_min_len,cnv_max_len) - 1
 			else:
 				c_len = random.choice(cnv_listl[ch])
 				cnv_ed = cnv_st + int(c_len) - 1
@@ -347,14 +365,16 @@ def assign_out_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 			elif method_s == 'uniform':
 				cnv_st = int(random.uniform(0,lg-1))
 			else:
-				cnv_st = find_gauss(lg)
+				cnv_st = find_gauss(lg,None,None,in_alpha,in_beta)
 
 			if method_l == 'random':
 				cnv_ed = cnv_st + random.randint(cnv_min_len,cnv_max_len) - 1
 			elif method_l == 'uniform':
 				cnv_ed = cnv_st + int(random.uniform(cnv_min_len,cnv_max_len)) - 1
 			elif method_l == 'gauss':
-				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len) - 1
+				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len,in_alpha,in_beta) - 1
+			elif method_l == 'beta':
+				cnv_ed = cnv_st + find_beta(in_alpha,in_beta,cnv_min_len,cnv_max_len) - 1
 			else:
 				c_len = random.choice(cnv_listl[ch])
 				cnv_ed = cnv_st + int(c_len) - 1
@@ -645,6 +665,9 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	opt = sim_params['opt']
 	in_fl = sim_params['fl']
 	in_inter = sim_params['inter']
+	in_rate = sim_params['rate']
+	in_alpha = sim_params['a']
+	in_beta = sim_params['b']
 
 	'''
 	log_print('Reading genome file...')
@@ -729,8 +752,9 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 				in_cnv_list_ed[ch][i] = list_all[i][1]
 				in_cn[ch][i] = list_all[i][2]
 
+	in_seqs2 = make_snps(in_seqs,in_chrs,in_rate)
 	st_new, ed_new, seqs_new = gen_rearranged_genome(in_chrs, in_cnv_list_st, in_cnv_list_ed, \
-		in_cn, in_st, in_ed, in_seqs)
+		in_cn, in_st, in_ed, in_seqs2)
 
 	# Write rearranged genome and targets
 	log_print('Writing rearranged genome and target regions to file...')
