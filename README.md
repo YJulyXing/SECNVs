@@ -2,6 +2,7 @@
 
 **Maintainer: Yue "July" Xing**<br>
 **Author: Yue "July" Xing**<br>
+**Contact: yue.july.xing@gmail.com**<br>
 **Version: 2.1**<br>
 **Date: 06/07/2019**
 
