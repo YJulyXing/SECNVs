@@ -16,6 +16,7 @@ Bam file generation uses BWA, samtools and GATK.
 * Added beta distribution for CNV length. User can define alpha and beta.
 * User can now define mu and sigma for gauss distribution.
 * Added feature: SNP simulation.
+* Bug fixes.
 
 
 ## Version 2.0 Update (05/23/2019):
