@@ -1,4 +1,4 @@
-# SECNVs (SimulateCNVs 2.0)
+# SECNVs (SimulateCNVs 2.1)
 
 **Maintainer: Yue "July" Xing**<br>
 **Author: Yue "July" Xing**<br>
