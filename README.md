@@ -2,8 +2,8 @@
 
 **Maintainer: Yue "July" Xing**<br>
 **Author: Yue "July" Xing**<br>
-**Version: 2.0**<br>
-**Date: 05/23/2019**
+**Version: 2.1**<br>
+**Date: 06/07/2019**
 
 
 ## Description
@@ -11,7 +11,13 @@ A tool for simulating CNVs for WES data. It simulates rearranged genomes, short 
 Short read simulation is based on the modified script of Wessim.
 Bam file generation uses BWA, samtools and GATK.
 
-## Version 2.0 Update
+## Version 2.1 Update (06/07/2019):
+* Added beta distribution for CNV length. User can define alpha and beta.
+* User can now define mu and sigma for gauss distribution.
+* Added feature: SNP simulation.
+
+
+## Version 2.0 Update (05/23/2019):
 * Use a modified script of Wessim1 instead of ART_illumina to simulate short reads. This enables GC filtration in the step of short read generation. The modification of Wessim's script fixed the following issues in Wessim1:<br>
 &#160;1) Only generate short reads at the start and end of each region, no reads generated in the middle of the regions.<br>
 &#160;2) Can't read in the first line of the bed file with no header.<br>
@@ -49,9 +55,9 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
                        [-max_len CNV_MAX_LENGTH] [-min_cn MIN_COPY_NUMBER]
                        [-max_cn MAX_COPY_NUMBER] [-p PROPORTION_INS]
                        [-f MIN_FLANKING_LEN] [-ms {random,uniform,gauss}]
-                       [-ml {random,uniform,gauss,user}] [-nr NREADS]
-                       [-fs FRAG_SIZE] [-s STDEV] [-l READ_LENGTH]
-                       [-tf TARGET_REGION_FLANK] [-pr]
+                       [-ml {random,uniform,gauss,beta,user}] [-a A] [-b B]
+                       [-r RATE] [-nr NREADS] [-fs FRAG_SIZE] [-s STDEV]
+                       [-l READ_LENGTH] [-tf TARGET_REGION_FLANK] [-pr]
                        [-q QUALITY_SCORE_OFFSET]
                        [-clr CONNECT_LEN_BETWEEN_REGIONS] [-m MODEL]
                        [-o OUTPUT_DIR] [-rn REARRANGED_OUTPUT_NAME]
@@ -94,7 +100,10 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -p PROPORTION_INS | 0.5 | Proportion of insertions | - |
 | -f MIN_FLANKING_LEN | 50 |  Minimum length between each CNV | - |
 | -ms {random,uniform,gauss} | random | Distribution of CNVs | - |
-| -ml {random,uniform,gauss,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
+| -ml {random,uniform,gauss,beta,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
+| -a A | - | Mu for gauss distribution and alpha for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
+| -b B | - | Sigma for gauss distribution and beta for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
+| -r RATE | 0 | Rate of SNPs | - |
 
 #### Arguments for simulating short reads (fastq):
 
