@@ -136,14 +136,27 @@ def find_missing(m_opt, m_chrs, m_seqs):
 	return ms
 
 def make_snps(n_seqs,chrs,rate):
+	mes = "Making SNPs... SNP rate = " + str(rate) + "."
+	log_print(mes)
+	lists={}
+	lists["A"]=["C","T","G"]
+	lists["T"]=["C","A","G"]
+	lists["G"]=["C","A","T"]
+	lists["C"]=["G","A","T"]
+	lists["N"]=["C","A","G","T","N"]
+	lists["a"]=["C","T","G"]
+	lists["t"]=["C","A","G"]
+	lists["g"]=["C","A","T"]
+	lists["c"]=["G","A","T"]
+	lists["n"]=["C","A","G","T","N"]
 	seqs = dict(n_seqs)
 	for ch in chrs: 
 		ln = len(seqs[ch])
 		n = int(ln*rate)
 		snploc = random.sample(range(0, ln), n)
 		for i in snploc:
-			t=random.randint(0,(len(list[seqs[ch][i]])-1))
-			seqs[ch] = seqs[ch][:i] + list[seqs[ch][i]][t] + seqs[ch][(i+1):]
+			t = random.randint(0,(len(lists[seqs[ch][i]])-1))
+			seqs[ch] = seqs[ch][:i] + lists[seqs[ch][i]][t] + seqs[ch][(i+1):]
 	return(seqs)
 
 def find_gauss(g_lg=None, g_cnv_min_len=None, g_cnv_max_len=None, alpha=None, beta=None):
@@ -218,7 +231,7 @@ def call_wessim(genome, region, nreads, read_length, frag_size, stdev, model, ou
 	else:
 		log_print("Single-end sequencing.")
 		pp = "s"
-	os.system('./call_wessim.sh ' + genome + ' ' + region + ' ' + ' ' + str(nreads) + ' ' + str(read_length) + \
+	os.system('./call_wessim.sh ' + genome + ' ' + region + ' ' + str(nreads) + ' ' + str(read_length) + \
 		' ' + str(frag_size) + ' ' + str(stdev) + ' ' + model + ' ' + output + ' ' + str(qual) + ' ' + pp)
 	os.chdir(dirn)
 

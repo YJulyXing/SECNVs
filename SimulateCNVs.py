@@ -158,16 +158,16 @@ def main():
 	param['flank'] = args.min_flanking_len
 	param['fl'] = args.target_region_flank
 	param['inter'] = args.connect_len_between_regions
-	params['rate'] = args.rate
-	params['a'] = args.a
-	params['b'] = args.b
+	param['rate'] = args.rate
+	param['a'] = args.a
+	param['b'] = args.b
 
 	t = args.num_samples
 	if t < 1:
 		log_print("Error: The number of test samples (-n) must be at least 1!")
 		exit(1)
 
-	if (params['rate'] < 0) or (params['rate'] > 1):
+	if (param['rate'] < 0) or (param['rate'] > 1):
 		log_print("Error: SNP rate must be between 0 and 1.")
 		exit(1)
 
