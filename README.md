@@ -103,8 +103,8 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -f MIN_FLANKING_LEN | 50 |  Minimum length between each CNV | - |
 | -ms {random,uniform,gauss} | random | Distribution of CNVs | - |
 | -ml {random,uniform,gauss,beta,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
-| -a A | - | Mu for gauss distribution and alpha for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
-| -b B | - | Sigma for gauss distribution and beta for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
+| -a A | 0 for gauss distribution, and 2 for beta distribution | Mu for gauss distribution and alpha for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
+| -b B | 1 for gauss distribution, and 2 for beta distribution | Sigma for gauss distribution and beta for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
 | -r RATE | 0 | Rate of SNPs | - |
 
 #### Arguments for simulating short reads (fastq):
