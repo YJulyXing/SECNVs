@@ -29,7 +29,7 @@ Bam file generation uses BWA, samtools and GATK.
 ## Installation
 No installation required. Simply type the following and it will be ready to use:
 ``` bash
-git clone https://github.com/YJulyXing/SECNVs-SimulateCNVs-2.0-.git
+git clone https://github.com/YJulyXing/SECNVs.git
 ```
 and unpack it using "tar".
 Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs).
