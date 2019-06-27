@@ -28,11 +28,12 @@ java -jar ${PATH_TO_PICARD}/picard.jar AddOrReplaceReadGroups \
     RGPL=illumina \
     RGSM=Sample1 \
     RGPU=L001 \
+    VALIDATION_STRINGENCY=LENIENT \
     CREATE_INDEX=True
 
 java -jar ${PATH_TO_GATK}/GenomeAnalysisTK.jar -T RealignerTargetCreator \
 -R ${OUT_DIR}/${REF}.fa -I ${FILE}.sr.rm.hd.bam -o ${FILE}_IndelRealigner.intervals
 
-java -jar ${PATH_TO_GATK}/GenomeAnalysisTK.jar -T IndelRealigner \
+java -jar ${PATH_TO_GATK}/GenomeAnalysisTK.jar --filter_bases_not_stored -T IndelRealigner \
 -R ${OUT_DIR}/${REF}.fa -I ${FILE}.sr.rm.hd.bam -targetIntervals ${FILE}_IndelRealigner.intervals \
 -o ${OUT_DIR}/${FILE}.final.bam
