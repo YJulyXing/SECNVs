@@ -88,7 +88,7 @@ usage: usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 
 |   Parameter                    |     Default value     |    Explanation                             | Restrictions |
 | :----------------------------: | :-------------------: | :----------------------------------------- | :----------- |
-| -rN | - | Replace gap regions (Ns) by ATGC randomly | This option will create a copy of the the original genome file with name genome_file_copy.fa in the same directory, and replace the original one. |
+| -rN | - | Replace gap regions (Ns) by ATGC randomly | This option will create a copy of the the original genome file with name genome_file_copy.fa in the working directory, and replace the original one. |
 | -em | - | Exclude gap sequences for CNV simulation | - |
 | -e_cnv TARGET_CNV_LIST | - | A user-defined list of CNVs overlapping with target regions | One and only one of -e_cnv, -e_chr, -e_tol and -e_cl can be used with WES simulation to generate CNVs overlapping with target regions.<br> If -e_cnv is provided, -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs overlapping with target regions. |
 | -e_chr TARGET_CNV_CHR | - | Number of CNVs overlapping with target regions to be generated on each chromosome | Same as above. |
