@@ -1,16 +1,20 @@
-# SECNVs (SimulateCNVs 2.1)
+# SECNVs 2.2 (SimulateCNVs 2.2)
 
 **Maintainer: Yue "July" Xing**<br>
 **Author: Yue "July" Xing**<br>
 **Contact: yue.july.xing@gmail.com**<br>
-**Version: 2.1**<br>
-**Date: 06/07/2019**
+**Version: 2.2**<br>
+**Date: 06/028/2019**
 
 
 ## Description
 A tool for simulating CNVs for WES data. It simulates rearranged genomes, short reads (fastq) and bam files automatically in one single command as desired by the user. There are several ways and distributions to choose from to generate desired CNVs.
 Short read simulation is based on the modified script of Wessim.
-Bam file generation uses BWA, samtools and GATK.
+Bam file generation uses BWA, samtools, picard and GATK.
+
+## Version 2.2 Update (06/28/2019):
+* Incorporated "replaceNs.py" to the main program as an option "-rN". No longer need to use "replaceNs.py" separately.
+* Bug fixes.
 
 ## Version 2.1 Update (06/07/2019):
 * Added beta distribution for CNV length. User can define alpha and beta.
@@ -48,23 +52,22 @@ Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs
 
 ## Usage
 ``` bash
-usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
-                       [-e_cnv EXON_CNV_LIST] [-e_chr EXON_CNV_CHR]
-                       [-e_tol EXON_CNV_TOL] [-e_cl EXON_CNV_LEN_FILE]
-                       [-o_cnv OUT_CNV_LIST] [-o_chr OUT_CNV_CHR]
-                       [-o_tol OUT_CNV_TOL] [-o_cl OUT_CNV_LEN_FILE]
-                       [-ol OVERLAP_BPS] [-em] [-min_len CNV_MIN_LENGTH]
-                       [-max_len CNV_MAX_LENGTH] [-min_cn MIN_COPY_NUMBER]
-                       [-max_cn MAX_COPY_NUMBER] [-p PROPORTION_INS]
-                       [-f MIN_FLANKING_LEN] [-ms {random,uniform,gauss}]
-                       [-ml {random,uniform,gauss,beta,user}] [-a A] [-b B]
-                       [-r RATE] [-nr NREADS] [-fs FRAG_SIZE] [-s STDEV]
-                       [-l READ_LENGTH] [-tf TARGET_REGION_FLANK] [-pr]
-                       [-q QUALITY_SCORE_OFFSET]
-                       [-clr CONNECT_LEN_BETWEEN_REGIONS] [-m MODEL]
-                       [-o OUTPUT_DIR] [-rn REARRANGED_OUTPUT_NAME]
-                       [-n NUM_SAMPLES] [-sc] [-ssr] [-sb]
-                       [-picard PATH_TO_PICARD] [-GATK PATH_TO_GATK]
+usage: usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
+                        [-e_cnv EXON_CNV_LIST] [-e_chr EXON_CNV_CHR]
+                        [-e_tol EXON_CNV_TOL] [-e_cl EXON_CNV_LEN_FILE]
+                        [-o_cnv OUT_CNV_LIST] [-o_chr OUT_CNV_CHR]
+                        [-o_tol OUT_CNV_TOL] [-o_cl OUT_CNV_LEN_FILE]
+                        [-ol OVERLAP_BPS] [-min_len CNV_MIN_LENGTH]
+                        [-max_len CNV_MAX_LENGTH] [-min_cn MIN_COPY_NUMBER]
+                        [-max_cn MAX_COPY_NUMBER] [-p PROPORTION_INS]
+                        [-f MIN_FLANKING_LEN] [-ms {random,uniform,gauss}]
+                        [-ml {random,uniform,gauss,beta,user}] [-as AS1] [-bs BS]
+                        [-al AL] [-bl BL] [-r RATE] [-nr NREADS] [-fs FRAG_SIZE]
+                        [-s STDEV] [-l READ_LENGTH] [-tf TARGET_REGION_FLANK] [-pr]
+                        [-q QUALITY_SCORE_OFFSET] [-clr CONNECT_LEN_BETWEEN_REGIONS]
+                        [-m MODEL] [-o OUTPUT_DIR] [-rn REARRANGED_OUTPUT_NAME]
+                        [-n NUM_SAMPLES] [-sc] [-ssr] [-sb] [-picard PATH_TO_PICARD]
+                        [-GATK PATH_TO_GATK]
 ```
 
 ## Arguments
@@ -85,6 +88,8 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 
 |   Parameter                    |     Default value     |    Explanation                             | Restrictions |
 | :----------------------------: | :-------------------: | :----------------------------------------- | :----------- |
+| -rN | - | Replace gap regions (Ns) by ATGC randomly | This option will create a copy of the the original genome file with name genome_file_copy.fa in the same directory, and replace the original one. |
+| -em | - | Exclude gap sequences for CNV simulation | - |
 | -e_cnv TARGET_CNV_LIST | - | A user-defined list of CNVs overlapping with target regions | One and only one of -e_cnv, -e_chr, -e_tol and -e_cl can be used with WES simulation to generate CNVs overlapping with target regions.<br> If -e_cnv is provided, -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs overlapping with target regions. |
 | -e_chr TARGET_CNV_CHR | - | Number of CNVs overlapping with target regions to be generated on each chromosome | Same as above. |
 | -e_tol TARGET_CNV_TOL | - | Total number of CNVs overlapping with target regions to be generated across the genome (an estimate) |  Same as above. |
@@ -94,7 +99,6 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -o_tol OUT_CNV_TOL | - | Total number of CNVs outside of target regions to be generated across the genome (an estimate) |  Same as above. |
 | -o_cl OUT_CNV_LEN_FILE | - | User supplied file of CNV length for CNVs outside of target regions | Must be used with -ml user. Can’t be used with -e_cnv, -e_chr and -e_tol. Otherwise same as above. |
 | -ol OVERLAP_BPS | 100 | For each CNV overlapping with target regions, number of minimum overlapping bps | - |
-| -em | - | Exclude missing sequences for CNV simulation | - |
 | -min_len CNV_MIN_LENGTH | 1000 |  Minimum CNV length in bps | - |
 | -max_len CNV_MAX_LENGTH | 100000 | Maximum CNV length in bps | - |
 | -min_cn MIN_COPY_NUMBER | 2 | Minimum copy number for insertions | - |
@@ -103,8 +107,10 @@ usage: SimulateCNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -f MIN_FLANKING_LEN | 50 |  Minimum length between each CNV | - |
 | -ms {random,uniform,gauss} | random | Distribution of CNVs | - |
 | -ml {random,uniform,gauss,beta,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
-| -a A | 0 for gauss distribution, and 2 for beta distribution | Mu for gauss distribution and alpha for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
-| -b B | 1 for gauss distribution, and 2 for beta distribution | Sigma for gauss distribution and beta for beta distribution. For other choices of -ms and -ml, this parameter will be ignored. | - |
+| -as AS1 | 0 | Mu for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
+| -bs BS | 1 | Sigma for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
+| -al AL | 0 for gauss distribution, and 2 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | For other choices of -ms and -ml, this parameter will be ignored. |
+| -bl BL | 1 for gauss distribution, and 2 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | For other choices of -ms and -ml, this parameter will be ignored. |
 | -r RATE | 0 | Rate of SNPs | - |
 
 #### Arguments for simulating short reads (fastq):
@@ -153,37 +159,37 @@ Short reads for control genome (fastq, if -sc and -ssr is chosen)
 Bam file(s) and index(es) for control genome (bam and bai, if -sc, -ssr and -sb is chosen)
 
 ## Examples
-1. Simulate 10 CNVs overlapping with exons (target regions), and 1 CNV outside of exons randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with exons, the overlapping length is not less than 90 bps. CNV start points and lengths follow gauss distribution. Don’t generate CNVs on missing sequences. Make 5 test samples and control. Generate short reads (fastq) files by default settings, using paired-end sequencing.
+1. Simulate 10 CNVs overlapping with target regions, and 1 CNV outside of target regions randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with target regions, the overlapping length is not less than 90 bps. CNV start points following Gauss(1, 2) distribution, and lengths follow Beta(2, 5) distribution. Don’t generate CNVs on gap regions. Make 5 test samples and control. Generate short reads (fastq) files by default settings, using paired-end sequencing.
 ``` bash
-SimulateCNVs/SimulateCNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
-                              -e_chr 10 -o_chr 1 -ol 90 -ms gauss -ml gauss -em -n 5 -sc -pr -ssr
+SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
+                  -e_chr 10 -o_chr 1 -ol 90 -ms gauss -as 1 -bs 2 -ml beta -al 2 -bl 5 -em -n 5 -sc -pr -ssr
 ```
 
-2. Simulate CNVs overlapping with exons from the provided CNV list. Simulate approximately 20 CNVs outside of exons randomly on the whole genome with default settings. For CNVs outside of exons, don’t generate CNVs on missing sequences. Make a pair of test and control genome.
+2. Simulate CNVs overlapping with target regions from a provided CNV list. Simulate approximately 20 CNVs outside of target regions randomly on the whole genome with default settings. Don’t generate CNVs on gap regions. Make a pair of test and control genome.
 ``` bash
-SimulateCNVs/SimulateCNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
-                              -e_cnv <list_of_CNV_overlapping_with_exons> -o_tol 20 -em -sc 
+SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
+                  -e_cnv <list_of_CNV_overlapping_with_exons> -o_tol 20 -em -sc 
 ```
 
-3. Simulate approximately 20 CNVs overlapping with exons on the whole genome, and at least 100 bps between each 2 CNVs. Don’t generate CNVs outside of exons. Don’t generate CNVs on missing sequences. Paired-end sequencing, with quality offset 60. Make a pair of test and control. The final outputs are bam files.
+3.	Simulate approximately 20 CNVs overlapping with target regions on the whole genome, and at least 100 bps between any 2 CNVs. Don’t generate CNVs outside of target regions. Replace gap regions randomly by nucleotides. Paired-end sequencing, with quality offset 35. Make a pair of test and control. The final outputs are BAM files.
 ``` bash
-SimulateCNVs/SimulateCNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
-                              -e_tol 20 -f 100 -em -sc -pr -q 60 -ssr -sb \
-                              -picard <absolute_path_to_picard> -GATK <absolute_path_to_GATK>
+SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
+                  -e_tol 20 -f 100 -rN -sc -pr -q 35 -ssr -sb \
+                  -picard <absolute_path_to_picard> -GATK <absolute_path_to_GATK>
 ```
 
-4. Simulate CNVs overlapping with exons and outside of exons from provided files of CNV lengths. If the length between 2 target regions are smaller than 100 bps, connect them as 1 target region. Don’t generate CNVs on missing sequences. Make 10 test samples and control. Use paired-end sequencing; sequence 50 bp up and down stream of the target regions (after connecting the target regions) as well. The final output is short reads (fastq) files with 100000 reads. 
+4.	Simulate CNVs overlapping with target regions and outside of target regions from provided files of CNV lengths. If the length between 2 target regions are smaller than 100 bps, connect them as 1 target region. Don’t generate CNVs on gap regions. Make 10 test samples and control. Use paired-end sequencing; sequence 50 bp up and down stream of the target regions (after connecting the target regions) as well. The final output is short reads (fastq) files with 100000 reads.
 ``` bash
-SimulateCNVs/SimulateCNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
-                              -ml user -e_cl <length_file_1> -o_cl <length_file_2> \
-                              -clr 100 -em -n 10 -sc -pr -tf 50 -nr 100000 -ssr 
+SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
+                  -ml user -e_cl <length_file_1> -o_cl <length_file_2> \
+                  -clr 100 -em -n 10 -sc -pr -tf 50 -nr 100000 -ssr 
 ```
 
 
 ***
 
 
-## ReplaceNs.py
+## ReplaceNs.py (Not needed for SECNVs version 2.2)
 
 **Maintainer: Yue "July" Xing**<br>
 **Author: Yue "July" Xing**<br>
