@@ -1,10 +1,5 @@
 #!/usr/bin/python
 
-'''
-Yue July Xing
-06/27/2018
-
-'''
 
 import random
 import os
@@ -35,7 +30,7 @@ def read_target(tname, chrs):
 	return(st, ed)
 
 def log_print(message):
-	print '[SimulateCNVs ' + time.asctime( time.localtime(time.time()) ) + '] ' + message
+	print '[SECNVs ' + time.asctime( time.localtime(time.time()) ) + '] ' + message
 	sys.stdout.flush()
 
 # Function for read in fasta file
@@ -170,7 +165,7 @@ def find_gauss(g_lg=None, g_cnv_min_len=None, g_cnv_max_len=None, alpha=None, be
 	return fg
 
 def find_beta(alpha,beta,g_cnv_min_len,g_cnv_max_len):
-	n = random.betavariate(alhpa, beta)
+	n = random.betavariate(alpha, beta)
 	clen = int(n*(g_cnv_max_len-g_cnv_min_len)) + g_cnv_min_len
 	return(clen)
 
@@ -249,7 +244,8 @@ def make_bam(path_to_picard, path_to_GATK, output_name, out_dir, tmp_dir, paired
 	#	+ output_name + ' ' + out_dir + ' ' + tmp_dir)
 
 def assign_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
-	overlap_bp, seqs, method_s, method_l, cnv_listl, ran_m, flank):
+	overlap_bp, seqs, method_s, method_l, cnv_listl, ran_m, flank, \
+	alphas, betas, alphal, betal):
 	c_len = None
 	cnv_list_st = {}
 	cnv_list_ed = {}
@@ -281,16 +277,16 @@ def assign_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 			elif method_s == 'uniform':
 				cnv_st = int(random.uniform(0,lg-1))
 			else:
-				cnv_st = find_gauss(lg,None,None,in_alpha,in_beta)
+				cnv_st = find_gauss(lg,None,None,alphas,betas)
 
 			if method_l == 'random':
 				cnv_ed = cnv_st + random.randint(cnv_min_len,cnv_max_len) - 1
 			elif method_l == 'uniform':
 				cnv_ed = cnv_st + int(random.uniform(cnv_min_len,cnv_max_len)) - 1
 			elif method_l == 'gauss':
-				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len,in_alpha,in_beta) - 1
+				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len,alphal,betal) - 1
 			elif method_l == 'beta':
-				cnv_ed = cnv_st + find_beta(in_alpha,in_beta,cnv_min_len,cnv_max_len) - 1
+				cnv_ed = cnv_st + find_beta(alphal,betal,cnv_min_len,cnv_max_len) - 1
 			else:
 				c_len = random.choice(cnv_listl[ch])
 				cnv_ed = cnv_st + int(c_len) - 1
@@ -342,7 +338,8 @@ def assign_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 	return(cnv_list_st, cnv_list_ed)
 
 def assign_out_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
-	seqs, cnv_ex_list_st, cnv_ex_list_ed, method_s, method_l, cnv_listl, ran_m, flank):
+	seqs, cnv_ex_list_st, cnv_ex_list_ed, method_s, method_l, cnv_listl, ran_m, \
+	flank, alphas, betas, alphal, betal):
 	cnv_list_st = {}
 	cnv_list_ed = {}
 	c_len = None
@@ -378,16 +375,16 @@ def assign_out_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 			elif method_s == 'uniform':
 				cnv_st = int(random.uniform(0,lg-1))
 			else:
-				cnv_st = find_gauss(lg,None,None,in_alpha,in_beta)
+				cnv_st = find_gauss(lg,None,None,alphas,betas)
 
 			if method_l == 'random':
 				cnv_ed = cnv_st + random.randint(cnv_min_len,cnv_max_len) - 1
 			elif method_l == 'uniform':
 				cnv_ed = cnv_st + int(random.uniform(cnv_min_len,cnv_max_len)) - 1
 			elif method_l == 'gauss':
-				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len,in_alpha,in_beta) - 1
+				cnv_ed = cnv_st + find_gauss(None,cnv_min_len,cnv_max_len,alphal,betal) - 1
 			elif method_l == 'beta':
-				cnv_ed = cnv_st + find_beta(in_alpha,in_beta,cnv_min_len,cnv_max_len) - 1
+				cnv_ed = cnv_st + find_beta(alphal,betal,cnv_min_len,cnv_max_len) - 1
 			else:
 				c_len = random.choice(cnv_listl[ch])
 				cnv_ed = cnv_st + int(c_len) - 1
@@ -599,33 +596,6 @@ def write_targets(targets_file, chrs, w_st, w_ed, seqs, inter, fl):
 				f.write(line)
 	f.close()
 
-'''
-def write_exon_fatsta(exon_fasta_file, seqs, chrs, st, ed, fl):
-	n = 50
-	with open(exon_fasta_file, 'w') as f:
-		for ch in chrs:
-			ln = len(seqs[ch])
-			for i in range(len(st[ch])):
-				if st[ch][i]-fl >= 0:
-					n_st = st[ch][i]-fl
-					start = st[ch][i] - fl + 1
-				else:
-					n_st = 0
-					start = 1			
-				if ed[ch][i]+fl+1 <= ln:
-					seq_i = seqs[ch][n_st:(ed[ch][i]+fl+1)]
-					end = ed[ch][i] + fl + 1
-				else:
-					seq_i = seqs[ch][n_st:]
-					end = ln
-				header_i = ">" + ch + '_' + str(start) + '_' + str(end) + '\n'
-				f.write(header_i)
-				for t in range(0, len(seq_i), n):
-					line = seq_i[t:t+n]
-					f.write(line + "\n")
-	f.close()
-'''
-
 # Simulation
 def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, eflag):
 	in_out_cn = None
@@ -654,8 +624,6 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	in_cnv_list_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".cnv.overlap_exon.bed")
 	in_cnv_out_list_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".cnv.out_of_exon.bed")
 	out_cnv_targets_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".target_regions_for_gen_short_reads.bed")
-	#out_exon_fasta_file = os.path.join(sim_params['tmp_dir'], sim_params['rearranged_out']+".target_region_fasta.fa")
-	#out_control_fasta_file = os.path.join(sim_params['tmp_dir'], "control_target_region_fasta.fa")
 	rearranged_out_name = os.path.join(sim_params['out_dir'], sim_params['rearranged_out'])
 	control_out_name = os.path.join(sim_params['out_dir'], 'control')
 	out_cnv_genome_file = rearranged_out_name + '.fa'
@@ -666,7 +634,6 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	in_paired_end = sim_params['paired_end']
 	in_qual = sim_params['qual']
 	in_model = sim_params['model']
-	#in_sim_control = sim_params['sim_control']
 	in_sim_control = sim_control
 	in_sim_short_reads = sim_params['sim_short_reads']
 	in_sim_bam = sim_params['sim_bam']
@@ -679,15 +646,10 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	in_fl = sim_params['fl']
 	in_inter = sim_params['inter']
 	in_rate = sim_params['rate']
-	in_alpha = sim_params['a']
-	in_beta = sim_params['b']
-
-	'''
-	log_print('Reading genome file...')
-	in_seqs, in_chrs = read_fasta(in_genome_file)
-	log_print('Reading target region file...')
-	in_st, in_ed = read_target(in_targets_file, in_chrs)
-	'''
+	in_alphas = sim_params['as']
+	in_betas = sim_params['bs']
+	in_alphal = sim_params['al']
+	in_betal = sim_params['bl']
 
 	# Generate CNVs that are randomly distributed in the genome
 		# If #CNVs given for the whole genome, #CNVs on each chromosome is 
@@ -713,7 +675,7 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 			in_tol_cnv, in_cnv_len_file, in_chrs, in_seqs)
 		in_cnv_list_st, in_cnv_list_ed = assign_cnv_pos(in_chrs, in_st, in_ed, in_num_cnv_list, \
 			in_cnv_min_len, in_cnv_max_len, in_overlap_bp, in_seqs, in_method_s, in_method_l, \
-			in_cnv_listl, in_ran_m, in_flank)
+			in_cnv_listl, in_ran_m, in_flank, in_alphas, in_betas, in_alphal, in_betal)
 		in_cn = assign_copy_numbers(in_chrs, tol, in_p_ins, in_min_cn, in_max_cn, \
 			in_cnv_list_st)
 
@@ -736,7 +698,7 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 		in_out_cnv_list_st, in_out_cnv_list_ed = assign_out_cnv_pos(in_chrs, in_st, in_ed, in_num_cnv_out_list, \
 			in_cnv_min_len, in_cnv_max_len, in_seqs, \
 			in_cnv_list_st, in_cnv_list_ed, in_method_s, in_method_l, \
-			in_out_cnv_listl, in_ran_m, in_flank)
+			in_out_cnv_listl, in_ran_m, in_flank, in_alphas, in_betas, in_alphal, in_betal)
 		in_out_cn = assign_copy_numbers(in_chrs, tol_out, in_p_ins, in_min_cn, in_max_cn, \
 			in_out_cnv_list_st)
 
