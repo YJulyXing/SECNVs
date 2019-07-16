@@ -1,16 +1,20 @@
-# SECNVs 2.2 (SimulateCNVs 2.2)
+# SECNVs 2.3 (SimulateCNVs 2.3)
 
 **Maintainer: Yue "July" Xing**<br>
 **Author: Yue "July" Xing**<br>
 **Contact: yue.july.xing@gmail.com**<br>
-**Version: 2.2**<br>
-**Date: 06/028/2019**
+**Version: 2.3**<br>
+**Date: 07/16/2019**
 
 
 ## Description
 A tool for simulating CNVs for WES data. It simulates rearranged genomes, short reads (fastq) and bam files automatically in one single command as desired by the user. There are several ways and distributions to choose from to generate desired CNVs.
-Short read simulation is based on the modified script of Wessim.
-Bam file generation uses BWA, samtools, picard and GATK.
+Custom codes and algorithms were used to simulate rearranged genomes.
+Short read simulation is based on the modified script of [Wessim](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3624799/).
+Bam file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http://samtools.sourceforge.net/), [picard](https://broadinstitute.github.io/picard/) and [GATK](https://software.broadinstitute.org/gatk/).
+
+## Version 2.3 Update (07/16/2019):
+* Changed SNP simulation from simulating on the whole genome to only in the target regions, which largely increase the speed.
 
 ## Version 2.2 Update (06/28/2019):
 * Incorporated "replaceNs.py" to the main program as an option "-rN". No longer need to use "replaceNs.py" separately.
@@ -22,13 +26,14 @@ Bam file generation uses BWA, samtools, picard and GATK.
 * Added feature: SNP simulation.
 * Bug fixes.
 
-
 ## Version 2.0 Update (05/23/2019):
 * Use a modified script of Wessim1 instead of ART_illumina to simulate short reads. This enables GC filtration in the step of short read generation. The modification of Wessim's script fixed the following issues in Wessim1:<br>
 &#160;1) Only generate short reads at the start and end of each region, no reads generated in the middle of the regions.<br>
 &#160;2) Can't read in the first line of the bed file with no header.<br>
 &#160;3) The length of each region was 1 bp less than it should be.<br>
 * Also, after modification Wessim1 doesn't require the genome to be indexed by "faidx", doesn't need python package "pysam", and the intermediate files can now be deleted automatically.
+
+*For the old version SimulateCNVs 1.0, please click [here](https://yjulyxing.github.io/).
 
 ## Installation
 No installation required. Simply type the following and it will be ready to use:
@@ -109,9 +114,9 @@ usage: usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 | -ml {random,uniform,gauss,beta,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
 | -as AS1 | 0 | Mu for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
 | -bs BS | 1 | Sigma for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
-| -al AL | 0 for gauss distribution, and 2 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | For other choices of -ms and -ml, this parameter will be ignored. |
-| -bl BL | 1 for gauss distribution, and 2 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | For other choices of -ms and -ml, this parameter will be ignored. |
-| -r RATE | 0 | Rate of SNPs | - |
+| -al AL | 0 for gauss distribution, and 0.5 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | *If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters. *For other choices of -ms and -ml, this parameter will be ignored. |
+| -bl BL | 1 for gauss distribution, and 2.3 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | *If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters. *For other choices of -ms and -ml, this parameter will be ignored. |
+| -r RATE | 0 | Rate of SNPs in target regions | - |
 
 #### Arguments for simulating short reads (fastq):
 
@@ -189,7 +194,7 @@ SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
 ***
 
 
-## ReplaceNs.py (Not needed for SECNVs version 2.2)
+## ReplaceNs.py (Not needed for SECNVs version 2.2 and later)
 
 **Maintainer: Yue "July" Xing**<br>
 **Author: Yue "July" Xing**<br>
