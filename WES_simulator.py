@@ -130,7 +130,7 @@ def find_missing(m_opt, m_chrs, m_seqs):
 					ms[ch].append(pos)
 	return ms
 
-def make_snps(n_seqs,chrs,rate):
+def make_snps_old(n_seqs,chrs,rate):
 	mes = "Making SNPs... SNP rate = " + str(rate) + "."
 	log_print(mes)
 	lists={}
@@ -149,6 +149,32 @@ def make_snps(n_seqs,chrs,rate):
 		ln = len(seqs[ch])
 		n = int(ln*rate)
 		snploc = random.sample(range(0, ln), n)
+		for i in snploc:
+			t = random.randint(0,(len(lists[seqs[ch][i]])-1))
+			seqs[ch] = seqs[ch][:i] + lists[seqs[ch][i]][t] + seqs[ch][(i+1):]
+	return(seqs)
+
+def make_snps(n_seqs,chrs,rate,st,ed):
+	mes = "Making SNPs... SNP rate = " + str(rate) + "."
+	log_print(mes)
+	lists={}
+	lists["A"]=["C","T","G"]
+	lists["T"]=["C","A","G"]
+	lists["G"]=["C","A","T"]
+	lists["C"]=["G","A","T"]
+	lists["N"]=["C","A","G","T","N"]
+	lists["a"]=["C","T","G"]
+	lists["t"]=["C","A","G"]
+	lists["g"]=["C","A","T"]
+	lists["c"]=["G","A","T"]
+	lists["n"]=["C","A","G","T","N"]
+	seqs = dict(n_seqs)
+	for ch in chrs: 
+		ran = []
+		for s in range(len(st[ch])):
+			ran += range(st[ch][s],ed[ch][s]+1)
+		snploc = random.sample(ran, int(len(ran)*rate))
+		del ran
 		for i in snploc:
 			t = random.randint(0,(len(lists[seqs[ch][i]])-1))
 			seqs[ch] = seqs[ch][:i] + lists[seqs[ch][i]][t] + seqs[ch][(i+1):]
@@ -727,7 +753,7 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 				in_cnv_list_ed[ch][i] = list_all[i][1]
 				in_cn[ch][i] = list_all[i][2]
 
-	in_seqs2 = make_snps(in_seqs,in_chrs,in_rate)
+	in_seqs2 = make_snps(in_seqs,in_chrs,in_rate,in_st,in_ed)
 	st_new, ed_new, seqs_new = gen_rearranged_genome(in_chrs, in_cnv_list_st, in_cnv_list_ed, \
 		in_cn, in_st, in_ed, in_seqs2)
 
