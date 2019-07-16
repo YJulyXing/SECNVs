@@ -67,7 +67,7 @@ def main():
 	group2.add_argument('-bl', dest='bl', type=float, default=None, \
 		help='Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution [1 for gauss distribution, and 2 for beta distribution]')
 	group2.add_argument('-r', dest='rate', type=float, default=0, \
-		help='Rate of SNPs [0]')
+		help='Rate of SNPs in target regions [0]')
 	
 	group3 = parser.add_argument_group('Arguments for simulating short reads (fastq)')
 	group3.add_argument('-nr', dest='nreads', type=int, default=10000, \
