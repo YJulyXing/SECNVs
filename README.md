@@ -95,11 +95,11 @@ usage: usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 | :----------------------------: | :-------------------: | :----------------------------------------- | :----------- |
 | -rN | - | Replace gap regions (Ns) by ATGC randomly | This option will create a copy of the the original genome file with name genome_file_copy.fa in the working directory, and replace the original one. |
 | -em | - | Exclude gap sequences for CNV simulation | - |
-| -e_cnv TARGET_CNV_LIST | - | A user-defined list of CNVs overlapping with target regions | * One and only one of -e_cnv, -e_chr, -e_tol and -e_cl can be used with WES simulation to generate CNVs overlapping with target regions. * If -e_cnv is provided, -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs overlapping with target regions. |
+| -e_cnv TARGET_CNV_LIST | - | A user-defined list of CNVs overlapping with target regions | One and only one of -e_cnv, -e_chr, -e_tol and -e_cl can be used with WES simulation to generate CNVs overlapping with target regions.<br> If -e_cnv is provided, -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs overlapping with target regions. |
 | -e_chr TARGET_CNV_CHR | - | Number of CNVs overlapping with target regions to be generated on each chromosome | Same as above. |
 | -e_tol TARGET_CNV_TOL | - | Total number of CNVs overlapping with target regions to be generated across the genome (an estimate) |  Same as above. |
 | -e_cl TARGET_CNV_LEN_FILE | - | User supplied file of CNV length for CNVs overlapping with target regions | Must be used with -ml user. Can’t be used with -o_cnv, -o_chr and -o_tol. Otherwise same as above. |
-| -o_cnv OUT_CNV_LIST | - | A user-defined list of CNVs outside of target regions | * One and only one of -o_cnv, -o_chr, -o_tol and -o_cl can be used with WES simulation to generate CNVs outside of target regions. * If -o_cnv is provided, -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs outside of target regions. |
+| -o_cnv OUT_CNV_LIST | - | A user-defined list of CNVs outside of target regions | One and only one of -o_cnv, -o_chr, -o_tol and -o_cl can be used with WES simulation to generate CNVs outside of target regions.<br> If -o_cnv is provided, -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs outside of target regions. |
 | -o_chr OUT_CNV_CHR | - | Number of CNVs outside of target regions to be generated on each chromosome |  Same as above. |
 | -o_tol OUT_CNV_TOL | - | Total number of CNVs outside of target regions to be generated across the genome (an estimate) |  Same as above. |
 | -o_cl OUT_CNV_LEN_FILE | - | User supplied file of CNV length for CNVs outside of target regions | Must be used with -ml user. Can’t be used with -e_cnv, -e_chr and -e_tol. Otherwise same as above. |
@@ -114,8 +114,8 @@ usage: usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 | -ml {random,uniform,gauss,beta,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
 | -as AS1 | 0 | Mu for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
 | -bs BS | 1 | Sigma for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
-| -al AL | 0 for gauss distribution, and 0.5 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | * If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters. * For other choices of -ms and -ml, this parameter will be ignored. |
-| -bl BL | 1 for gauss distribution, and 2.3 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | * If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters. * For other choices of -ms and -ml, this parameter will be ignored. |
+| -al AL | 0 for gauss distribution, and 0.5 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
+| -bl BL | 1 for gauss distribution, and 2.3 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
 | -r RATE | 0 | Rate of SNPs in target regions | - |
 
 #### Arguments for simulating short reads (fastq):
