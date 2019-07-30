@@ -1,10 +1,9 @@
-# SECNVs 2.3 (SimulateCNVs 2.3)
+# SECNVs 2.4 (SimulateCNVs 2.4)
 
 **Maintainer: Yue "July" Xing**<br>
-**Author: Yue "July" Xing**<br>
 **Contact: yue.july.xing@gmail.com**<br>
-**Version: 2.3**<br>
-**Date: 07/16/2019**
+**Version: 2.4**<br>
+**Date: 07/30/2019**
 
 
 ## Description
@@ -13,8 +12,11 @@ Custom codes and algorithms were used to simulate rearranged genomes.
 Short read simulation is based on the modified script of [Wessim](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3624799/).
 Bam file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http://samtools.sourceforge.net/), [picard](https://broadinstitute.github.io/picard/) and [GATK](https://software.broadinstitute.org/gatk/).
 
+## Version 2.4 Update (07/30/2019):
+* Added indel simulation.
+
 ## Version 2.3 Update (07/16/2019):
-* Changed SNP simulation from simulating on the whole genome to only in the target regions, which largely increase the speed.
+* Changed SNP simulation from simulating on the whole genome to only in the target regions, which highly increase the speed.
 
 ## Version 2.2 Update (06/28/2019):
 * Incorporated "replaceNs.py" to the main program as an option "-rN". No longer need to use "replaceNs.py" separately.
@@ -44,7 +46,7 @@ and unpack it using "tar".
 Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs).
 
 ## Requirements
-* General use: [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: argparse, random, os, subprocess, math, sys, time
+* General use: [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: argparse, random, os, subprocess, math, sys, time, copy
 * To generate short reads (fastq) outputs (see requirements for [Wessim](http://sak042.github.io/Wessim/): <br>
 &#160;1. [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: bisect, gzip, cPickle, numpy, multiprocessing <br>
 &#160;2. [GemSim](https://sourceforge.net/projects/gemsim/) error models. This tool by default uses the GemSim model "Illumina  GA  IIx  with  TrueSeq  SBS  Kit  v5‐GA,  paired reads", and has "Illumina  GA  IIx  with  TrueSeq  SBS  Kit  v5‐GA,  single reads" bulit in as well. Users can make their own error models using real data by GemErr.py  in GemSim.
@@ -57,22 +59,23 @@ Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs
 
 ## Usage
 ``` bash
-usage: usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
-                        [-e_cnv EXON_CNV_LIST] [-e_chr EXON_CNV_CHR]
-                        [-e_tol EXON_CNV_TOL] [-e_cl EXON_CNV_LEN_FILE]
-                        [-o_cnv OUT_CNV_LIST] [-o_chr OUT_CNV_CHR]
-                        [-o_tol OUT_CNV_TOL] [-o_cl OUT_CNV_LEN_FILE]
-                        [-ol OVERLAP_BPS] [-min_len CNV_MIN_LENGTH]
-                        [-max_len CNV_MAX_LENGTH] [-min_cn MIN_COPY_NUMBER]
-                        [-max_cn MAX_COPY_NUMBER] [-p PROPORTION_INS]
-                        [-f MIN_FLANKING_LEN] [-ms {random,uniform,gauss}]
-                        [-ml {random,uniform,gauss,beta,user}] [-as AS1] [-bs BS]
-                        [-al AL] [-bl BL] [-r RATE] [-nr NREADS] [-fs FRAG_SIZE]
-                        [-s STDEV] [-l READ_LENGTH] [-tf TARGET_REGION_FLANK] [-pr]
-                        [-q QUALITY_SCORE_OFFSET] [-clr CONNECT_LEN_BETWEEN_REGIONS]
-                        [-m MODEL] [-o OUTPUT_DIR] [-rn REARRANGED_OUTPUT_NAME]
-                        [-n NUM_SAMPLES] [-sc] [-ssr] [-sb] [-picard PATH_TO_PICARD]
-                        [-GATK PATH_TO_GATK]
+usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
+                 [-e_cnv EXON_CNV_LIST] [-e_chr EXON_CNV_CHR]
+                 [-e_tol EXON_CNV_TOL] [-e_cl EXON_CNV_LEN_FILE]
+                 [-o_cnv OUT_CNV_LIST] [-o_chr OUT_CNV_CHR]
+                 [-o_tol OUT_CNV_TOL] [-o_cl OUT_CNV_LEN_FILE]
+                 [-ol OVERLAP_BPS] [-min_len CNV_MIN_LENGTH]
+                 [-max_len CNV_MAX_LENGTH] [-min_cn MIN_COPY_NUMBER]
+                 [-max_cn MAX_COPY_NUMBER] [-p PROPORTION_INS]
+                 [-f MIN_FLANKING_LEN] [-ms {random,uniform,gauss}]
+                 [-ml {random,uniform,gauss,beta,user}] [-as AS1] [-bs BS]
+                 [-al AL] [-bl BL] [-s_r S_RATE] [-i_r I_RATE]
+                 [-i_mlen I_MAX_LEN] [-nr NREADS] [-fs FRAG_SIZE] [-s STDEV]
+                 [-l READ_LENGTH] [-tf TARGET_REGION_FLANK] [-pr]
+                 [-q QUALITY_SCORE_OFFSET] [-clr CONNECT_LEN_BETWEEN_REGIONS]
+                 [-m MODEL] [-o OUTPUT_DIR] [-rn REARRANGED_OUTPUT_NAME]
+                 [-n NUM_SAMPLES] [-sc] [-ssr] [-sb] [-picard PATH_TO_PICARD]
+                 [-GATK PATH_TO_GATK]
 ```
 
 ## Arguments
@@ -116,7 +119,9 @@ usage: usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 | -bs BS | 1 | Sigma for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
 | -al AL | 0 for gauss distribution, and 0.5 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
 | -bl BL | 1 for gauss distribution, and 2.3 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
-| -r RATE | 0 | Rate of SNPs in target regions | - |
+| -s_r S_RATE | 0 | Rate of SNPs in target regions | - |
+| -i_r I_RATE | 0 | Rate of indels in target regions | - |
+| -i_mlen I_MAX_LEN | 50 | The Maximum length of indels in target regions | If a deletion is equal or larger than the length of the target region it is in, the length of the deletion will be changed to length of the target region it is in - 1.|
 
 #### Arguments for simulating short reads (fastq):
 
