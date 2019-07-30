@@ -121,7 +121,7 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 | -bl BL | 1 for gauss distribution, and 2.3 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
 | -s_r S_RATE | 0 | Rate of SNPs in target regions | - |
 | -i_r I_RATE | 0 | Rate of indels in target regions | - |
-| -i_mlen I_MAX_LEN | 50 | The Maximum length of indels in target regions | If a deletion is equal or larger than the length of the target region it is in, the length of the deletion will be changed to length of the target region it is in - 1.|
+| -i_mlen I_MAX_LEN | 50 | The Maximum length of indels in target regions | If a deletion is equal or larger than the length of the target region it is in, the length of the deletion will be changed to (length of the target region it is in) - 1.|
 
 #### Arguments for simulating short reads (fastq):
 
