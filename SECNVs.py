@@ -7,6 +7,7 @@ import subprocess
 import math
 import sys
 import time
+import copy
 
 from WES_simulator import *
 
@@ -66,8 +67,12 @@ def main():
 		help='Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution [0 for gauss distribution, and 2 for beta distribution]')
 	group2.add_argument('-bl', dest='bl', type=float, default=None, \
 		help='Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution [1 for gauss distribution, and 2 for beta distribution]')
-	group2.add_argument('-r', dest='rate', type=float, default=0, \
+	group2.add_argument('-s_r', dest='s_rate', type=float, default=0, \
 		help='Rate of SNPs in target regions [0]')
+	group2.add_argument('-i_r', dest='i_rate', type=float, default=0, \
+		help='Rate of indels in target regions [0]')
+	group2.add_argument('-i_mlen', dest='i_max_len', type=float, default=50, \
+		help='The Maximum length of indels in target regions [50]. (If a deletion is equal or larger than the length of the target region it is in, the length of the deletion will be changed to (length of the target region it is in) - 1.)')
 	
 	group3 = parser.add_argument_group('Arguments for simulating short reads (fastq)')
 	group3.add_argument('-nr', dest='nreads', type=int, default=10000, \
@@ -158,7 +163,9 @@ def main():
 	param['flank'] = args.min_flanking_len
 	param['fl'] = args.target_region_flank
 	param['inter'] = args.connect_len_between_regions
-	param['rate'] = args.rate
+	param['s_rate'] = args.s_rate
+	param['i_rate'] = args.i_rate
+	param['i_mlen'] = args.i_max_len
 	param['as'] = args.as1
 	param['bs'] = args.bs
 	param['al'] = args.al

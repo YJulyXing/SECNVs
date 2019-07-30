@@ -7,6 +7,7 @@ import subprocess
 import math
 import sys
 import time
+import copy
 
 # Function for read in target region file
 def read_target(tname, chrs):
@@ -144,7 +145,7 @@ def make_snps_old(n_seqs,chrs,rate):
 	lists["g"]=["C","A","T"]
 	lists["c"]=["G","A","T"]
 	lists["n"]=["C","A","G","T","N"]
-	seqs = dict(n_seqs)
+	seqs = copy.deepcopy(n_seqs)
 	for ch in chrs: 
 		ln = len(seqs[ch])
 		n = int(ln*rate)
@@ -155,7 +156,9 @@ def make_snps_old(n_seqs,chrs,rate):
 	return(seqs)
 
 def make_snps(n_seqs,chrs,rate,st,ed):
-	mes = "Making SNPs... SNP rate = " + str(rate) + "."
+	mes = "Making SNPs..."
+	log_print(mes)
+	mes = "SNP rate = " + str(rate)
 	log_print(mes)
 	lists={}
 	lists["A"]=["C","T","G"]
@@ -168,7 +171,7 @@ def make_snps(n_seqs,chrs,rate,st,ed):
 	lists["g"]=["C","A","T"]
 	lists["c"]=["G","A","T"]
 	lists["n"]=["C","A","G","T","N"]
-	seqs = dict(n_seqs)
+	seqs = copy.deepcopy(n_seqs)
 	for ch in chrs: 
 		ran = []
 		for s in range(len(st[ch])):
@@ -179,6 +182,54 @@ def make_snps(n_seqs,chrs,rate,st,ed):
 			t = random.randint(0,(len(lists[seqs[ch][i]])-1))
 			seqs[ch] = seqs[ch][:i] + lists[seqs[ch][i]][t] + seqs[ch][(i+1):]
 	return(seqs)
+
+def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
+	mes = "Making indels..."
+	log_print(mes)
+	mes = "Indel rate = " + str(i_rate)
+	log_print(mes)
+	mes = "Max indel length = " + str(i_mlen)
+	log_print(mes)
+	lists=["A","C","T","G"]
+	seqs = copy.deepcopy(n_seqs)
+	st = copy.deepcopy(n_st)
+	ed = copy.deepcopy(n_ed)
+	for ch in chrs: 
+		ran = []
+		for s in range(len(st[ch])):
+			ran += range(st[ch][s],ed[ch][s]+1)
+		indloc = random.sample(ran, int(len(ran)*i_rate))
+		indloc.sort()
+		indlen = random.choices(range(1,(i_mlen+1)),k=len(indloc))
+		indlen = [e * random.choice([-1,1]) for e in indlen]
+		del ran
+		for i in range(len(indloc)):
+			if indlen[i] > 0:
+				t = random.choices(lists,k=indlen[i])
+				ins = ''.join(t)
+				seqs[ch] = seqs[ch][:indloc[i]] + ins + seqs[ch][indloc[i]:]
+				for e in range(len(st[ch])):
+					if st[ch][e] > indloc[i]:
+						st[ch][e] = st[ch][e] + indlen[i]
+					if ed[ch][e] >= indloc[i]:
+						ed[ch][e] = ed[ch][e] + indlen[i]
+				for e in range(i+1,len(indloc)):
+					indloc[e] = indloc[e] + indlen[i]
+			else:
+				for e in range(len(st[ch])):
+					if st[ch][e] <= indloc[i] and ed[ch][e] >= indloc[i]:
+						if ed[ch][e] - indloc[i] + 1 <= -indlen[i]:
+							# at least 1 bp remaining in the target region
+							indlen[i] = -(ed[ch][e] - indloc[i])
+				seqs[ch] = seqs[ch][:indloc[i]] + seqs[ch][(indloc[i]-indlen[i]):]
+				for e in range(len(st[ch])):
+					if st[ch][e] > indloc[i]:
+						st[ch][e] = st[ch][e] + indlen[i]
+					if ed[ch][e] >= indloc[i]:
+						ed[ch][e] = ed[ch][e] + indlen[i]
+				for e in range(i+1,len(indloc)):
+					indloc[e] = indloc[e] + indlen[i]
+	return(seqs,st,ed)
 
 def find_gauss(g_lg=None, g_cnv_min_len=None, g_cnv_max_len=None, alpha=None, beta=None):
 	s = -10
@@ -472,11 +523,11 @@ def assign_out_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 
 # Function to generate rearranged genome
 def gen_rearranged_genome(chrs, n_cnv_list_st, n_cnv_list_ed, cn, n_st, n_ed, n_seqs):
-	cnv_list_st = dict(n_cnv_list_st)
-	cnv_list_ed = dict(n_cnv_list_ed)
-	st = dict(n_st) 
-	ed = dict(n_ed) 
-	seqs = dict(n_seqs)
+	cnv_list_st = copy.deepcopy(n_cnv_list_st)
+	cnv_list_ed = copy.deepcopy(n_cnv_list_ed)
+	st = copy.deepcopy(n_st) 
+	ed = copy.deepcopy(n_ed) 
+	seqs = copy.deepcopy(n_seqs)
 	for ch in chrs:
 		for i in range(len(cn[ch])):
 			cnv_st = cnv_list_st[ch][i]
@@ -562,8 +613,8 @@ def gen_rearranged_genome(chrs, n_cnv_list_st, n_cnv_list_ed, cn, n_st, n_ed, n_
 	return st, ed, seqs
 
 def write_targets(targets_file, chrs, w_st, w_ed, seqs, inter, fl):
-	st = dict(w_st)
-	ed = dict(w_ed)
+	st = copy.deepcopy(w_st)
+	ed = copy.deepcopy(w_ed)
 	st_w = {}
 	ed_w = {}
 	st_w2 = {}
@@ -584,8 +635,8 @@ def write_targets(targets_file, chrs, w_st, w_ed, seqs, inter, fl):
 				st_w[ch] = []
 				ed_w[ch] = []
 	else:
-		st_w = dict(st)
-		ed_w = dict(ed)
+		st_w = copy.deepcopy(st)
+		ed_w = copy.deepcopy(ed)
 
 	for ch in chrs:
 		rag = range(len(st_w[ch]))
@@ -626,13 +677,13 @@ def write_targets(targets_file, chrs, w_st, w_ed, seqs, inter, fl):
 def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, eflag):
 	in_out_cn = None
 	in_ran_m = None
-	in_seqs = dict(ein_seqs)
+	in_seqs = copy.deepcopy(ein_seqs)
 	in_chrs = list(ein_chrs)
-	in_st = dict(ein_st)
-	in_ed = dict(ein_ed)
-	ori_st = dict(ein_st)
-	ori_ed = dict(ein_ed)
-	ori_seqs = dict(ein_seqs)
+	in_st = copy.deepcopy(ein_st)
+	in_ed = copy.deepcopy(ein_ed)
+	ori_st = copy.deepcopy(ein_st)
+	ori_ed = copy.deepcopy(ein_ed)
+	ori_seqs = copy.deepcopy(ein_seqs)
 	in_genome_file = sim_params['genome_file']
 	in_targets_file = sim_params['target_region_file']
 	in_cnvname = sim_params['e_cnv_list']
@@ -671,11 +722,22 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	opt = sim_params['opt']
 	in_fl = sim_params['fl']
 	in_inter = sim_params['inter']
-	in_rate = sim_params['rate']
+	in_rate = sim_params['s_rate']
+	indel_rate = param['i_rate']
+	indel_mlen = param['i_mlen']
 	in_alphas = sim_params['as']
 	in_betas = sim_params['bs']
 	in_alphal = sim_params['al']
 	in_betal = sim_params['bl']
+	
+	if eflag == 0:
+		write_targets(os.path.join(sim_params['out_dir'],'control.target_regions_for_gen_short_reads.bed'), 
+			in_chrs, ori_st, ori_ed, ori_seqs, in_inter, in_fl)
+	
+	if in_sim_control:
+		subprocess.call(['cp', in_genome_file, os.path.join(sim_params['out_dir'],'control.fa')])
+		#write_cnv_genome(os.path.join(sim_params['out_dir'],'control.fa'), in_chrs, ori_seqs)
+		#shutil.copy2(in_genome_file, os.path.join(sim_params['out_dir'],'control.fa'))
 
 	# Generate CNVs that are randomly distributed in the genome
 		# If #CNVs given for the whole genome, #CNVs on each chromosome is 
@@ -754,23 +816,15 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 				in_cn[ch][i] = list_all[i][2]
 
 	in_seqs2 = make_snps(in_seqs,in_chrs,in_rate,in_st,in_ed)
+	in_seqs3,in_st3,in_ed3 = make_indels(in_seqs2,in_chrs,indel_rate, \
+		indel_mlen,in_st,in_ed)
 	st_new, ed_new, seqs_new = gen_rearranged_genome(in_chrs, in_cnv_list_st, in_cnv_list_ed, \
-		in_cn, in_st, in_ed, in_seqs2)
+		in_cn, in_st3, in_ed3, in_seqs3)
 
 	# Write rearranged genome and targets
 	log_print('Writing rearranged genome and target regions to file...')
 	write_targets(out_cnv_targets_file, in_chrs, st_new, ed_new, seqs_new, in_inter, in_fl)
 	write_cnv_genome(out_cnv_genome_file, in_chrs, seqs_new)
-
-	if eflag == 0:
-		write_targets(os.path.join(sim_params['out_dir'],'control.target_regions_for_gen_short_reads.bed'), 
-			in_chrs, ori_st, ori_ed, in_seqs, in_inter, in_fl)
-	
-	if in_sim_control:
-		subprocess.call(['cp', in_genome_file, os.path.join(sim_params['out_dir'],'control.fa')])
-		#write_cnv_genome(os.path.join(sim_params['out_dir'],'control.fa'), in_chrs, ori_seqs)
-		#shutil.copy2(in_genome_file, os.path.join(sim_params['out_dir'],'control.fa'))
-		
 
 	# Simulation with wessim
 	if in_sim_short_reads:
