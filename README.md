@@ -1,9 +1,9 @@
-# SECNVs 2.4 (SimulateCNVs 2.4)
+# SECNVs 2.5 (SimulateCNVs 2.5)
 
 **Maintainer: Yue "July" Xing**<br>
 **Contact: yue.july.xing@gmail.com**<br>
-**Version: 2.4**<br>
-**Date: 07/30/2019**
+**Version: 2.5**<br>
+**Date: 08/21/2019**
 
 
 ## Description
@@ -11,6 +11,12 @@ A tool for simulating CNVs for WES data. It simulates rearranged genomes, short 
 Custom codes and algorithms were used to simulate rearranged genomes.
 Short read simulation is based on the modified script of [Wessim](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3624799/).
 Bam file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http://samtools.sourceforge.net/), [picard](https://broadinstitute.github.io/picard/) and [GATK](https://software.broadinstitute.org/gatk/).
+
+## Version 2.5 Update (08/21/2019):
+* Added an option to add slack regions up and down stream of target regions to simulate SNPs.
+* The random simulation for SNPs is now weighted.
+* Modified the functions of SNP and indel simulation to increase the speed.
+* Bug fixes.
 
 ## Version 2.4 Update (07/30/2019):
 * Added indel simulation.
@@ -69,7 +75,7 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
                  [-max_cn MAX_COPY_NUMBER] [-p PROPORTION_INS]
                  [-f MIN_FLANKING_LEN] [-ms {random,uniform,gauss}]
                  [-ml {random,uniform,gauss,beta,user}] [-as AS1] [-bs BS]
-                 [-al AL] [-bl BL] [-s_r S_RATE] [-i_r I_RATE]
+                 [-al AL] [-bl BL] [-s_r S_RATE] [-s_s S_SLACK] [-i_r I_RATE]
                  [-i_mlen I_MAX_LEN] [-nr NREADS] [-fs FRAG_SIZE] [-s STDEV]
                  [-l READ_LENGTH] [-tf TARGET_REGION_FLANK] [-pr]
                  [-q QUALITY_SCORE_OFFSET] [-clr CONNECT_LEN_BETWEEN_REGIONS]
@@ -111,7 +117,7 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 | -max_len CNV_MAX_LENGTH | 100000 | Maximum CNV length in bps | - |
 | -min_cn MIN_COPY_NUMBER | 2 | Minimum copy number for insertions | - |
 | -max_cn MAX_COPY_NUMBER | 10 | Maximum copy number for insertions | - |
-| -p PROPORTION_INS | 0.5 | Proportion of insertions | - |
+| -p PROPORTION_INS | 0.5 | Proportion of insertions | Must be between 0 and 1 |
 | -f MIN_FLANKING_LEN | 50 |  Minimum length between each CNV | - |
 | -ms {random,uniform,gauss} | random | Distribution of CNVs | - |
 | -ml {random,uniform,gauss,beta,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
@@ -119,8 +125,9 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 | -bs BS | 1 | Sigma for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
 | -al AL | 0 for gauss distribution, and 0.5 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
 | -bl BL | 1 for gauss distribution, and 2.3 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
-| -s_r S_RATE | 0 | Rate of SNPs in target regions | - |
-| -i_r I_RATE | 0 | Rate of indels in target regions | - |
+| -s_r S_RATE | 0 | Rate of SNPs in target regions | Must be between 0 and 1 |
+| -s_s S_SLACK | 0 | Slack region up and down stream of target regions to simulate SNPs | Must >= 0 |
+| -i_r I_RATE | 0 | Rate of indels in target regions | Must be between 0 and 1 |
 | -i_mlen I_MAX_LEN | 50 | The Maximum length of indels in target regions | If a deletion is equal or larger than the length of the target region it is in, the length of the deletion will be changed to (length of the target region it is in) - 1.|
 
 #### Arguments for simulating short reads (fastq):
