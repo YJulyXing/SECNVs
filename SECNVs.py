@@ -69,6 +69,8 @@ def main():
 		help='Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution [1 for gauss distribution, and 2 for beta distribution]')
 	group2.add_argument('-s_r', dest='s_rate', type=float, default=0, \
 		help='Rate of SNPs in target regions [0]')
+	group2.add_argument('-s_s', dest='s_slack', type=int, default=0, \
+		help='Slack region up and down stream of target regions to simulate SNPs [0]')
 	group2.add_argument('-i_r', dest='i_rate', type=float, default=0, \
 		help='Rate of indels in target regions [0]')
 	group2.add_argument('-i_mlen', dest='i_max_len', type=float, default=50, \
@@ -170,14 +172,31 @@ def main():
 	param['bs'] = args.bs
 	param['al'] = args.al
 	param['bl'] = args.bl
+	param['snp_slack'] = args.s_slack
 
 	t = args.num_samples
 	if t < 1:
 		log_print("Error: The number of test samples (-n) must be at least 1!")
 		exit(1)
 
-	if (param['rate'] < 0) or (param['rate'] > 1):
+	if (param['p_ins'] < 0) or (param['p_ins'] > 1):
+		log_print("Error: Insertion rate must be between 0 and 1.")
+		exit(1)
+
+	if (param['s_rate'] < 0) or (param['s_rate'] > 1):
 		log_print("Error: SNP rate must be between 0 and 1.")
+		exit(1)
+
+	if (param['i_rate'] < 0) or (param['i_rate'] > 1):
+		log_print("Error: indel rate must be between 0 and 1.")
+		exit(1)
+
+	if (param['i_mlen'] < 0):
+		log_print("Error: the maximium length of indels must > 0.")
+		exit(1)
+
+	if (param['snp_slack'] < 0):
+		log_print("Error: the slack region for making SNPS must > 0.")
 		exit(1)
 
 	if param['method_s'] == 'gauss':
@@ -285,7 +304,7 @@ def main():
 	sys.stdout.flush()
 	print '                      SECNVs (2019)                     '
 	sys.stdout.flush()
-	print '                     Version 2.2  (June 2019)                    '
+	print '                     Version 2.4  (July 2019)                    '
 	sys.stdout.flush()
 	print '        Bug report: Yue Xing <yue.july.xing@gmail.com>        '
 	sys.stdout.flush()
@@ -305,13 +324,17 @@ def main():
 			line = file.readline().rstrip('\n')
 			if not line:
 				break
-			seq=list(line)
-			for i in range(len(seq)):
-				if (seq[i] == "N") or (seq[i] == "n"):
-					seq[i] = random.choice(listi)
-			seq2 = ''.join(seq)
-			file_write.writelines(seq2)
-			file_write.write('\n')
+			if line[0]=='>':
+				file_write.writelines(line)
+				file_write.write('\n')
+			else:	
+				seq=list(line)
+				for i in range(len(seq)):
+					if (seq[i] == "N") or (seq[i] == "n"):
+						seq[i] = random.choice(listi)
+				seq2 = ''.join(seq)
+				file_write.writelines(seq2)
+				file_write.write('\n')
 		file_write.close()
 		file.close()
 		subprocess.call(['rm', '-f', param['genome_file']], stderr=None)

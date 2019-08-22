@@ -8,6 +8,7 @@ import math
 import sys
 import time
 import copy
+from numpy.random import choice as choices
 
 # Function for read in target region file
 def read_target(tname, chrs):
@@ -131,56 +132,37 @@ def find_missing(m_opt, m_chrs, m_seqs):
 					ms[ch].append(pos)
 	return ms
 
-def make_snps_old(n_seqs,chrs,rate):
-	mes = "Making SNPs... SNP rate = " + str(rate) + "."
-	log_print(mes)
-	lists={}
-	lists["A"]=["C","T","G"]
-	lists["T"]=["C","A","G"]
-	lists["G"]=["C","A","T"]
-	lists["C"]=["G","A","T"]
-	lists["N"]=["C","A","G","T","N"]
-	lists["a"]=["C","T","G"]
-	lists["t"]=["C","A","G"]
-	lists["g"]=["C","A","T"]
-	lists["c"]=["G","A","T"]
-	lists["n"]=["C","A","G","T","N"]
-	seqs = copy.deepcopy(n_seqs)
-	for ch in chrs: 
-		ln = len(seqs[ch])
-		n = int(ln*rate)
-		snploc = random.sample(range(0, ln), n)
-		for i in snploc:
-			t = random.randint(0,(len(lists[seqs[ch][i]])-1))
-			seqs[ch] = seqs[ch][:i] + lists[seqs[ch][i]][t] + seqs[ch][(i+1):]
-	return(seqs)
+def switch_nt(nt):
+    switcher = {
+        "A": list(choices(["C","T","G"],1,p=[0.14, 0.04, 0.82])),
+        "T": choices(["C","A","G"],1,p=[0.84, 0.03, 0.13]),
+        "G": choices(["C","A","T"],1,p=[0.19, 0.7, 0.11]),
+        "C": choices(["G","A","T"],1,p=[0.17, 0.12, 0.71]),
+        "N": choices(["C","A","G","T","N"],1,p=[0.2,0.2,0.2,0.2,0.2]),
+        "a": choices(["C","T","G"],1,p=[0.14, 0.04, 0.82]),
+        "t": choices(["C","A","G"],1,p=[0.84, 0.03, 0.13]),
+        "g": choices(["C","A","T"],1,p=[0.19, 0.7, 0.11]),
+        "c": choices(["G","A","T"],1,p=[0.17, 0.12, 0.71]),
+        "n": choices(["C","A","G","T","N"],1,p=[0.2,0.2,0.2,0.2,0.2])
+    }
+    return switcher.get(nt, "N")
 
-def make_snps(n_seqs,chrs,rate,st,ed):
+def make_snps(n_seqs,chrs,rate,st,ed,sslack):
 	mes = "Making SNPs..."
 	log_print(mes)
 	mes = "SNP rate = " + str(rate)
 	log_print(mes)
-	lists={}
-	lists["A"]=["C","T","G"]
-	lists["T"]=["C","A","G"]
-	lists["G"]=["C","A","T"]
-	lists["C"]=["G","A","T"]
-	lists["N"]=["C","A","G","T","N"]
-	lists["a"]=["C","T","G"]
-	lists["t"]=["C","A","G"]
-	lists["g"]=["C","A","T"]
-	lists["c"]=["G","A","T"]
-	lists["n"]=["C","A","G","T","N"]
 	seqs = copy.deepcopy(n_seqs)
 	for ch in chrs: 
 		ran = []
 		for s in range(len(st[ch])):
-			ran += range(st[ch][s],ed[ch][s]+1)
+			ran += range(st[ch][s]-sslack,ed[ch][s]+1+sslack)
 		snploc = random.sample(ran, int(len(ran)*rate))
+		mes = "SNP number on " + ch + ":" + str(len(snploc))
+		log_print(mes)
 		del ran
 		for i in snploc:
-			t = random.randint(0,(len(lists[seqs[ch][i]])-1))
-			seqs[ch] = seqs[ch][:i] + lists[seqs[ch][i]][t] + seqs[ch][(i+1):]
+			seqs[ch] = seqs[ch][:i] + switch_nt(seqs[ch][i])[0] + seqs[ch][(i+1):]
 	return(seqs)
 
 def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
@@ -199,13 +181,15 @@ def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
 		for s in range(len(st[ch])):
 			ran += range(st[ch][s],ed[ch][s]+1)
 		indloc = random.sample(ran, int(len(ran)*i_rate))
+		mes = "Indel number on " + ch + ":" + str(len(indloc))
+		log_print(mes)
 		indloc.sort()
-		indlen = random.choices(range(1,(i_mlen+1)),k=len(indloc))
+		indlen = list(choices(range(1,(i_mlen+1)), len(indloc)))
 		indlen = [e * random.choice([-1,1]) for e in indlen]
 		del ran
 		for i in range(len(indloc)):
 			if indlen[i] > 0:
-				t = random.choices(lists,k=indlen[i])
+				t = list(choices(lists,indlen[i]))
 				ins = ''.join(t)
 				seqs[ch] = seqs[ch][:indloc[i]] + ins + seqs[ch][indloc[i]:]
 				for e in range(len(st[ch])):
@@ -723,12 +707,13 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	in_fl = sim_params['fl']
 	in_inter = sim_params['inter']
 	in_rate = sim_params['s_rate']
-	indel_rate = param['i_rate']
-	indel_mlen = param['i_mlen']
+	indel_rate = sim_params['i_rate']
+	indel_mlen = sim_params['i_mlen']
 	in_alphas = sim_params['as']
 	in_betas = sim_params['bs']
 	in_alphal = sim_params['al']
 	in_betal = sim_params['bl']
+	in_sslack = sim_params['snp_slack']
 	
 	if eflag == 0:
 		write_targets(os.path.join(sim_params['out_dir'],'control.target_regions_for_gen_short_reads.bed'), 
@@ -815,7 +800,7 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 				in_cnv_list_ed[ch][i] = list_all[i][1]
 				in_cn[ch][i] = list_all[i][2]
 
-	in_seqs2 = make_snps(in_seqs,in_chrs,in_rate,in_st,in_ed)
+	in_seqs2 = make_snps(in_seqs,in_chrs,in_rate,in_st,in_ed,in_sslack)
 	in_seqs3,in_st3,in_ed3 = make_indels(in_seqs2,in_chrs,indel_rate, \
 		indel_mlen,in_st,in_ed)
 	st_new, ed_new, seqs_new = gen_rearranged_genome(in_chrs, in_cnv_list_st, in_cnv_list_ed, \
