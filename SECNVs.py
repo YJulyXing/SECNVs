@@ -8,6 +8,7 @@ import math
 import sys
 import time
 import copy
+from numpy.random import choice as choices
 
 from WES_simulator import *
 
