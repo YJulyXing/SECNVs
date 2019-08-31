@@ -2,8 +2,8 @@
 
 **Maintainer: Yue "July" Xing**<br>
 **Contact: yue.july.xing@gmail.com**<br>
-**Version: 2.5**<br>
-**Date: 08/21/2019**
+**Version: 2.6**<br>
+**Date: 08/31/2019**
 
 
 ## Description
@@ -12,10 +12,16 @@ Custom codes and algorithms were used to simulate rearranged genomes.
 Short read simulation is based on the modified script of [Wessim](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3624799/).
 Bam file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http://samtools.sourceforge.net/), [picard](https://broadinstitute.github.io/picard/) and [GATK](https://software.broadinstitute.org/gatk/).
 
+## Version 2.6 Update (08/31/2019):
+* Users now can choose to only randomly replace gap regions (minimum length for defining the gap can be determined by the user), replace all "N"s or doesn't do any replacement.
+* Users now can choose to only avoid gap regions (minimum length for defining the gap can be determined by the user), avoid all "N"s or doesn't avoid any "N"s.
+* The control genome file randomly replaced "N"s/gap regions is now in the output directory with name "control.fa", instead of overwritting the original reference genome file.
+* Modified the functions of SNP simulation to increase speed.
+
 ## Version 2.5 Update (08/21/2019):
 * Added an option to add slack regions up and down stream of target regions to simulate SNPs.
 * The random simulation for SNPs is now weighted.
-* Modified the functions of SNP and indel simulation to increase the speed.
+* Modified the functions of SNP and indel simulation to increase speed.
 * Bug fixes.
 
 ## Version 2.4 Update (07/30/2019):
@@ -65,15 +71,17 @@ Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs
 
 ## Usage
 ``` bash
-usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
-                 [-e_cnv EXON_CNV_LIST] [-e_chr EXON_CNV_CHR]
-                 [-e_tol EXON_CNV_TOL] [-e_cl EXON_CNV_LEN_FILE]
-                 [-o_cnv OUT_CNV_LIST] [-o_chr OUT_CNV_CHR]
-                 [-o_tol OUT_CNV_TOL] [-o_cl OUT_CNV_LEN_FILE]
-                 [-ol OVERLAP_BPS] [-min_len CNV_MIN_LENGTH]
-                 [-max_len CNV_MAX_LENGTH] [-min_cn MIN_COPY_NUMBER]
-                 [-max_cn MAX_COPY_NUMBER] [-p PROPORTION_INS]
-                 [-f MIN_FLANKING_LEN] [-ms {random,uniform,gauss}]
+usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
+                 [-rN {none,gap,all}] [-eN {none,gap,all}]
+                 [-n_gap NUM_N_FOR_GAPS] [-e_cnv EXON_CNV_LIST]
+                 [-e_chr EXON_CNV_CHR] [-e_tol EXON_CNV_TOL]
+                 [-e_cl EXON_CNV_LEN_FILE] [-o_cnv OUT_CNV_LIST]
+                 [-o_chr OUT_CNV_CHR] [-o_tol OUT_CNV_TOL]
+                 [-o_cl OUT_CNV_LEN_FILE] [-ol OVERLAP_BPS]
+                 [-min_len CNV_MIN_LENGTH] [-max_len CNV_MAX_LENGTH]
+                 [-min_cn MIN_COPY_NUMBER] [-max_cn MAX_COPY_NUMBER]
+                 [-p PROPORTION_INS] [-f MIN_FLANKING_LEN]
+                 [-ms {random,uniform,gauss}]
                  [-ml {random,uniform,gauss,beta,user}] [-as AS1] [-bs BS]
                  [-al AL] [-bl BL] [-s_r S_RATE] [-s_s S_SLACK] [-i_r I_RATE]
                  [-i_mlen I_MAX_LEN] [-nr NREADS] [-fs FRAG_SIZE] [-s STDEV]
@@ -102,8 +110,9 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE [-rN] [-em]
 
 |   Parameter                    |     Default value     |    Explanation                             | Restrictions |
 | :----------------------------: | :-------------------: | :----------------------------------------- | :----------- |
-| -rN | - | Replace gap regions (Ns) by ATGC randomly | This option will create a copy of the the original genome file with name genome_file_copy.fa in the working directory, and replace the original one. |
-| -em | - | Exclude gap sequences for CNV simulation | - |
+| -rN {none,gap,all} | none | Replace sequences of "N"s by ATGC randomly? | Output is the "control.fa" file in output directory for any of the choices. This file is used as control for all steps. None: no change; gap: replace gap regions only; all: replace all "N"s. |
+| -eN {none,gap,all} | none | Exclude sequences of "N"s for CNV simulation? | None: does not exclude anything; gap: exclude gap regions only; all: exclude all "N"s. |
+| -n_gap NUM_N_FOR_GAPS | none |  Number of consecutive "N"s to be considered a gap region | - |
 | -e_cnv TARGET_CNV_LIST | - | A user-defined list of CNVs overlapping with target regions | One and only one of -e_cnv, -e_chr, -e_tol and -e_cl can be used with WES simulation to generate CNVs overlapping with target regions.<br> If -e_cnv is provided, -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs overlapping with target regions. |
 | -e_chr TARGET_CNV_CHR | - | Number of CNVs overlapping with target regions to be generated on each chromosome | Same as above. |
 | -e_tol TARGET_CNV_TOL | - | Total number of CNVs overlapping with target regions to be generated across the genome (an estimate) |  Same as above. |
@@ -201,32 +210,3 @@ SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -ml user -e_cl <length_file_1> -o_cl <length_file_2> \
                   -clr 100 -em -n 10 -sc -pr -tf 50 -nr 100000 -ssr 
 ```
-
-
-***
-
-
-## ReplaceNs.py (Not needed for SECNVs version 2.2 and later)
-
-**Maintainer: Yue "July" Xing**<br>
-**Author: Yue "July" Xing**<br>
-**Version: 1.0**<br>
-**Date: 06/27/2018**
-
-### Description
-A small program to fix genomes which have too many ‘N’s to generate desired CNVs. It replaces all ‘N’s in the genome sequence to ‘A’s, ‘T’s, ‘G’s, or ‘C’s randomly.
-
-### Installation
-It is included in the package of SECNVs.
-
-### Requirements
-[Python 2.7](https://www.python.org/download/releases/2.7/)
-
-### Usage
-``` bash
-ReplaceNs.py [-h] -i INPUT_FASTA_FILE -o OUTPUT_FASTA_FILE
-```
-### Arguments
--h: help<br>
--i: input genome sequence in fasta format<br>
--o output genome sequence in fasta format
