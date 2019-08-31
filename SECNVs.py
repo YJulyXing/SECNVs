@@ -22,10 +22,12 @@ def main():
 		help='Target region file')
 
 	group2 = parser.add_argument_group('Arguments for simulating rearranged genomes')
-	group2.add_argument('-rN', dest='replaceNs', action='store_true', \
-		help='Replace gap regions (Ns) by ATGC randomly. Caution: This option will create a copy of the the original genome file with name genome_file_copy.fa in the working directory, and replace the original one.')
-	group2.add_argument('-em', dest='exclude_missing', action='store_true', \
-		help='Exclude gap sequences for CNV simulation')
+	group2.add_argument('-rN', dest='replaceNs', choices=['none','gap','all'], default="none", \
+		help='Replace sequences of "N"s by ATGC randomly? [none]')
+	group2.add_argument('-eN', dest='exclude_Ns', choices=['none','gap','all'], default="none", \
+		help='Exclude sequences of "N"s for CNV simulation? [none]')
+	group2.add_argument('-n_gap', dest='num_N_for_gaps', type=int, default = 50, \
+		help='Number of consecutive "N"s to be considered a gap region [50]')
 	group2.add_argument('-e_cnv', dest='exon_cnv_list', type=str, default=None, \
 		help='A user-defined list of CNVs overlapping with exons')
 	group2.add_argument('-e_chr', dest='exon_cnv_chr', type=int, default = None, \
@@ -162,7 +164,8 @@ def main():
 	param['method_l'] = args.method_l
 	param['e_cnv_len_file'] = args.exon_cnv_len_file
 	param['o_cnv_len_file'] = args.out_cnv_len_file
-	param['opt'] = args.exclude_missing
+	param['opt'] = args.exclude_Ns
+	param['gapn'] = args.num_N_for_gaps
 	param['flank'] = args.min_flanking_len
 	param['fl'] = args.target_region_flank
 	param['inter'] = args.connect_len_between_regions
@@ -305,7 +308,7 @@ def main():
 	sys.stdout.flush()
 	print '                      SECNVs (2019)                     '
 	sys.stdout.flush()
-	print '                     Version 2.4  (July 2019)                    '
+	print '                     Version 2.6  (Aug 2019)                    '
 	sys.stdout.flush()
 	print '        Bug report: Yue Xing <yue.july.xing@gmail.com>        '
 	sys.stdout.flush()
@@ -313,35 +316,8 @@ def main():
 	sys.stdout.flush()
     
 	log_print('Reading genome file...')
-	if param['replaceN'] == True:
-		subprocess.call(['cp', param['genome_file'], 'genome_file_copy.fa'], stderr=None)
-		listi=list("ATGC")
-		log_print("Replace gap regions...")
-		log_print("Opening the original fasta file...")
-		file = open(param['genome_file'])
-		log_print("Writing the imputed fasta file...")
-		file_write = open("tmp.fa", 'w')
-		while True:
-			line = file.readline().rstrip('\n')
-			if not line:
-				break
-			if line[0]=='>':
-				file_write.writelines(line)
-				file_write.write('\n')
-			else:	
-				seq=list(line)
-				for i in range(len(seq)):
-					if (seq[i] == "N") or (seq[i] == "n"):
-						seq[i] = random.choice(listi)
-				seq2 = ''.join(seq)
-				file_write.writelines(seq2)
-				file_write.write('\n')
-		file_write.close()
-		file.close()
-		subprocess.call(['rm', '-f', param['genome_file']], stderr=None)
-		subprocess.call(['mv', 'tmp.fa', param['genome_file']], stderr=None)
-
-	iin_seqs, iin_chrs = read_fasta(param['genome_file'])
+	iin_seqs, iin_chrs = read_fasta(param['genome_file'], \
+		param['replaceN'], param['gapn'], param['out_dir'])
 
 	if param['type'] == 'e':
 		log_print('Reading target region file...')

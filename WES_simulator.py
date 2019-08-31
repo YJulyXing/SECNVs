@@ -35,12 +35,28 @@ def log_print(message):
 	print '[SECNVs ' + time.asctime( time.localtime(time.time()) ) + '] ' + message
 	sys.stdout.flush()
 
+def write_genome(genome_file, chrs, seqs):
+	n = 50
+	with open(genome_file, 'w') as f:
+		for ch in chrs:
+			header = ">" + ch
+			f.write(header + "\n")
+			for i in range(0, len(seqs[ch]), n):
+				line = seqs[ch][i:i+n]
+				f.write(line + "\n")
+	f.close()
+
+def N_range(N_list):
+	gaps = [[s, e] for s, e in zip(N_list, N_list[1:]) if s+1 < e]
+	edges = iter(N_list[:1] + sum(gaps, []) + N_list[-1:])
+	return list(zip(edges, edges))
+
 # Function for read in fasta file
-def read_fasta(fname):
+def read_fasta(fname,rN,m_gapn,out_dir):
+	listi=list("ATGC")
+	name = None
+	seqs = {}
 	with open(fname, "r") as fh:
-		name = None
-		seqs = {}
-		seqs2 = {}
 		for line in fh.readlines():
 			if line[0]=='>':
 				line = line.rstrip()
@@ -49,13 +65,43 @@ def read_fasta(fname):
 				name = name.split("_")[0]
 				seqs[name] = []
 			else:
-				seqs[name].append(line.rstrip())
+				seqs[name].append(line.rstrip().upper())
+	fh.close()
 	chrs = []
 	for key in seqs:
 		chrs.append(key)
-		seqs2[key] = ''.join(seqs[key])
-	fh.close()
-	return(seqs2, chrs)
+		seqs[key] = ''.join(seqs[key])
+	if rN == "none":
+		log_print("Does not replace any N regions...")
+	elif rN == "all":
+		log_print("Replacing all N regions...")
+		for key in seqs:
+			seqs[key] = list(seqs[key])
+			for i in range(len(seqs[key])):	
+				if seqs[key][i] == "N":
+					seqs[key][i] = random.choice(listi)
+			seqs[key] = ''.join(seqs[key])
+	elif rN == "gap":
+		log_print("Replacing gap regions...")
+		for key in seqs:
+			seqs[key] = list(seqs[key])
+			l_ms = []
+			for pos, char in enumerate(seqs[key]):
+				if char == 'N':
+					l_ms.append(pos)
+			l_ran = N_range(l_ms)
+			for i in range(len(l_ran)):
+				if l_ran[i][1] - l_ran[i][0] + 1 < m_gapn:
+					l_ms = [e for e in l_ms if e not in list(range(l_ran[i][0], l_ran[i][1]+1))]
+			for p in l_ms:
+				seqs[key][p] = random.choice(listi)
+			seqs[key] = ''.join(seqs[key])
+	gname = os.path.join(out_dir,'control.fa')
+	if rN == "none":
+		subprocess.call(['cp', fname, gname])
+	else:
+		write_genome(gname, chrs, seqs)
+	return(seqs, chrs)
 
 def read_cnv(cnvname, chrs):
 	# this file must be pre-sorted!
@@ -122,30 +168,26 @@ def make_num_cnv_list(num_cnv, tol_cnv, cnv_len_file, chrs, seqs):
 def intersect(a, b):
 	return list(set(a) & set(b))
 
-def find_missing(m_opt, m_chrs, m_seqs):
+def find_missing(m_opt, m_chrs, m_seqs, m_gapn):
+	if m_opt == "gap":
+		log_print('Excluding gap sequences in the genome...')
+	elif m_opt == "all":
+		log_print('Excluding all "N" sequences in the genome...')
+	elif m_opt == "none":
+		log_print('Ignoring all "N" sequences in the genome...')	
 	ms = {}
 	for ch in m_chrs:
 		ms[ch] = []
-		if m_opt:
+		if m_opt != "none":
 			for pos, char in enumerate(m_seqs[ch]):
 				if char == 'N':
 					ms[ch].append(pos)
+			if m_opt == "gap":
+				nran = N_range(ms[ch])
+				for i in range(len(nran)):
+					if nran[i][1] - nran[i][0] + 1 < m_gapn:
+						ms[ch] = [e for e in ms[ch] if e not in list(range(nran[i][0], nran[i][1]+1))]
 	return ms
-
-def switch_nt(nt):
-    switcher = {
-        "A": list(choices(["C","T","G"],1,p=[0.14, 0.04, 0.82])),
-        "T": choices(["C","A","G"],1,p=[0.84, 0.03, 0.13]),
-        "G": choices(["C","A","T"],1,p=[0.19, 0.7, 0.11]),
-        "C": choices(["G","A","T"],1,p=[0.17, 0.12, 0.71]),
-        "N": choices(["C","A","G","T","N"],1,p=[0.2,0.2,0.2,0.2,0.2]),
-        "a": choices(["C","T","G"],1,p=[0.14, 0.04, 0.82]),
-        "t": choices(["C","A","G"],1,p=[0.84, 0.03, 0.13]),
-        "g": choices(["C","A","T"],1,p=[0.19, 0.7, 0.11]),
-        "c": choices(["G","A","T"],1,p=[0.17, 0.12, 0.71]),
-        "n": choices(["C","A","G","T","N"],1,p=[0.2,0.2,0.2,0.2,0.2])
-    }
-    return switcher.get(nt, "N")
 
 def make_snps(n_seqs,chrs,rate,st,ed,sslack):
 	mes = "Making SNPs..."
@@ -157,12 +199,33 @@ def make_snps(n_seqs,chrs,rate,st,ed,sslack):
 		ran = []
 		for s in range(len(st[ch])):
 			ran += range(st[ch][s]-sslack,ed[ch][s]+1+sslack)
+		ran = set(ran)
 		snploc = random.sample(ran, int(len(ran)*rate))
 		mes = "SNP number on " + ch + ":" + str(len(snploc))
 		log_print(mes)
 		del ran
+		snps = list(seqs[ch][s] for s in snploc)
+		sA = list(choices(["C","T","G"],snps.count("A"),p=[0.14, 0.04, 0.82]))
+		sT = list(choices(["C","A","G"],snps.count("T"),p=[0.84, 0.03, 0.13]))
+		sG = list(choices(["C","A","T"],snps.count("G"),p=[0.19, 0.7, 0.11]))
+		sC = list(choices(["G","A","T"],snps.count("C"),p=[0.17, 0.12, 0.71]))
+		aa = 0
+		gg = 0
+		tt = 0
+		cc = 0
 		for i in snploc:
-			seqs[ch] = seqs[ch][:i] + switch_nt(seqs[ch][i])[0] + seqs[ch][(i+1):]
+			if seqs[ch][i] =="A":
+				seqs[ch] = seqs[ch][:i] + sA[aa] + seqs[ch][i+1:]
+				aa += 1
+			elif seqs[ch][i] =="T":
+				seqs[ch] = seqs[ch][:i] + sT[tt] + seqs[ch][i+1:]
+				tt += 1
+			elif seqs[ch][i] =="G":
+				seqs[ch] = seqs[ch][:i] + sG[gg] + seqs[ch][i+1:]
+				gg += 1
+			elif seqs[ch][i] =="C":
+				seqs[ch] = seqs[ch][:i] + sC[cc] + seqs[ch][i+1:]
+				cc += 1
 	return(seqs)
 
 def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
@@ -704,6 +767,7 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	in_cnv_len_file_out = sim_params['o_cnv_len_file']
 	in_flank = sim_params['flank']
 	opt = sim_params['opt']
+	in_gapn = sim_params['gapn']
 	in_fl = sim_params['fl']
 	in_inter = sim_params['inter']
 	in_rate = sim_params['s_rate']
@@ -719,8 +783,8 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 		write_targets(os.path.join(sim_params['out_dir'],'control.target_regions_for_gen_short_reads.bed'), 
 			in_chrs, ori_st, ori_ed, ori_seqs, in_inter, in_fl)
 	
-	if in_sim_control:
-		subprocess.call(['cp', in_genome_file, os.path.join(sim_params['out_dir'],'control.fa')])
+	#if in_sim_control:
+		#subprocess.call(['cp', in_genome_file, os.path.join(sim_params['out_dir'],'control.fa')])
 		#write_cnv_genome(os.path.join(sim_params['out_dir'],'control.fa'), in_chrs, ori_seqs)
 		#shutil.copy2(in_genome_file, os.path.join(sim_params['out_dir'],'control.fa'))
 
@@ -740,9 +804,7 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 		else:
 			in_cnv_list_st, in_cnv_list_ed, in_cn = read_cnv(in_cnvname, in_chrs)			
 	else:
-		if opt:
-			log_print('Exclude missing sequences in the genome...')
-		in_ran_m = find_missing(opt, in_chrs, in_seqs)
+		in_ran_m = find_missing(opt, in_chrs, in_seqs, in_gapn)
 		log_print('Generating CNVs overlapping with exons...')
 		in_num_cnv_list, tol, in_cnv_listl = make_num_cnv_list(in_num_cnv, \
 			in_tol_cnv, in_cnv_len_file, in_chrs, in_seqs)
@@ -763,9 +825,7 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	elif in_tol_cnv_out or in_num_cnv_out or in_cnv_len_file_out:
 		log_print('Generating CNVs outside of exons...')
 		if not in_ran_m:
-			if opt:
-				log_print('Exclude missing sequences in the genome...')
-			in_ran_m = find_missing(opt, in_chrs, in_seqs)
+			in_ran_m = find_missing(opt, in_chrs, in_seqs, in_gapn)
 		in_num_cnv_out_list, tol_out, in_out_cnv_listl = make_num_cnv_list(in_num_cnv_out, \
 			in_tol_cnv_out, in_cnv_len_file_out, in_chrs, in_seqs)
 		in_out_cnv_list_st, in_out_cnv_list_ed = assign_out_cnv_pos(in_chrs, in_st, in_ed, in_num_cnv_out_list, \
@@ -824,8 +884,8 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	# Simulate bam files
 	if in_sim_bam:
 		ref_genome = os.path.join(sim_params['out_dir'], 'control.fa')
-		if not os.path.exists(ref_genome):
-			subprocess.call(['cp', in_genome_file, ref_genome])
+		#if not os.path.exists(ref_genome):
+			#subprocess.call(['cp', in_genome_file, ref_genome])
 			#write_cnv_genome(ref_genome, in_chrs, ori_seqs)
 			#shutil.copy2(in_genome_file, ref_genome)
 
