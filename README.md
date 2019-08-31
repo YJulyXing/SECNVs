@@ -1,4 +1,4 @@
-# SECNVs 2.5 (SimulateCNVs 2.5)
+# SECNVs 2.6 (SimulateCNVs 2.6)
 
 **Maintainer: Yue "July" Xing**<br>
 **Contact: yue.july.xing@gmail.com**<br>
@@ -16,7 +16,7 @@ Bam file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http
 * Users now can choose to only randomly replace gap regions (minimum length for defining the gap can be determined by the user), replace all "N"s or doesn't do any replacement.
 * Users now can choose to only avoid gap regions (minimum length for defining the gap can be determined by the user), avoid all "N"s or doesn't avoid any "N"s.
 * The control genome file randomly replaced "N"s/gap regions is now in the output directory with name "control.fa", instead of overwritting the original reference genome file.
-* Modified the functions of SNP simulation to increase speed.
+* Modified the functions of SNP simulation.
 
 ## Version 2.5 Update (08/21/2019):
 * Added an option to add slack regions up and down stream of target regions to simulate SNPs.
