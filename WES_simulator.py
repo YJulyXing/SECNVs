@@ -97,10 +97,7 @@ def read_fasta(fname,rN,m_gapn,out_dir):
 				seqs[key][p] = random.choice(listi)
 			seqs[key] = ''.join(seqs[key])
 	gname = os.path.join(out_dir,'control.fa')
-	if rN == "none":
-		subprocess.call(['cp', fname, gname])
-	else:
-		write_genome(gname, chrs, seqs)
+	write_genome(gname, chrs, seqs)
 	return(seqs, chrs)
 
 def read_cnv(cnvname, chrs):
@@ -189,6 +186,16 @@ def find_missing(m_opt, m_chrs, m_seqs, m_gapn):
 						ms[ch] = [e for e in ms[ch] if e not in list(range(nran[i][0], nran[i][1]+1))]
 	return ms
 
+def switch_nt(nt):
+	switcher = {
+		"A": list(choices(["C","T","G"],1,p=[0.14, 0.04, 0.82])),
+		"T": list(choices(["C","A","G"],1,p=[0.84, 0.03, 0.13])),
+		"G": list(choices(["C","A","T"],1,p=[0.19, 0.7, 0.11])),
+		"C": list(choices(["G","A","T"],1,p=[0.17, 0.12, 0.71])),
+		"N": ["N"]
+	}
+	return switcher.get(nt, "N")
+
 def make_snps(n_seqs,chrs,rate,st,ed,sslack):
 	mes = "Making SNPs..."
 	log_print(mes)
@@ -196,36 +203,17 @@ def make_snps(n_seqs,chrs,rate,st,ed,sslack):
 	log_print(mes)
 	seqs = copy.deepcopy(n_seqs)
 	for ch in chrs: 
+		seqs[ch] = list(seqs[ch])
 		ran = []
 		for s in range(len(st[ch])):
 			ran += range(st[ch][s]-sslack,ed[ch][s]+1+sslack)
-		ran = set(ran)
 		snploc = random.sample(ran, int(len(ran)*rate))
 		mes = "SNP number on " + ch + ":" + str(len(snploc))
 		log_print(mes)
 		del ran
-		snps = list(seqs[ch][s] for s in snploc)
-		sA = list(choices(["C","T","G"],snps.count("A"),p=[0.14, 0.04, 0.82]))
-		sT = list(choices(["C","A","G"],snps.count("T"),p=[0.84, 0.03, 0.13]))
-		sG = list(choices(["C","A","T"],snps.count("G"),p=[0.19, 0.7, 0.11]))
-		sC = list(choices(["G","A","T"],snps.count("C"),p=[0.17, 0.12, 0.71]))
-		aa = 0
-		gg = 0
-		tt = 0
-		cc = 0
 		for i in snploc:
-			if seqs[ch][i] =="A":
-				seqs[ch] = seqs[ch][:i] + sA[aa] + seqs[ch][i+1:]
-				aa += 1
-			elif seqs[ch][i] =="T":
-				seqs[ch] = seqs[ch][:i] + sT[tt] + seqs[ch][i+1:]
-				tt += 1
-			elif seqs[ch][i] =="G":
-				seqs[ch] = seqs[ch][:i] + sG[gg] + seqs[ch][i+1:]
-				gg += 1
-			elif seqs[ch][i] =="C":
-				seqs[ch] = seqs[ch][:i] + sC[cc] + seqs[ch][i+1:]
-				cc += 1
+			seqs[ch][i] = switch_nt(seqs[ch][i])[0]
+		seqs[ch] = ''.join(seqs[ch])
 	return(seqs)
 
 def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
@@ -250,7 +238,8 @@ def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
 		indlen = list(choices(range(1,(i_mlen+1)), len(indloc)))
 		indlen = [e * random.choice([-1,1]) for e in indlen]
 		del ran
-		for i in range(len(indloc)):
+		i = 0
+		while i < len(indloc):
 			if indlen[i] > 0:
 				t = list(choices(lists,indlen[i]))
 				ins = ''.join(t)
@@ -268,6 +257,12 @@ def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
 						if ed[ch][e] - indloc[i] + 1 <= -indlen[i]:
 							# at least 1 bp remaining in the target region
 							indlen[i] = -(ed[ch][e] - indloc[i])
+				rem = []
+				for l in range(i+1,len(indloc)):
+					if indloc[l] <= indloc[i] - indlen[i] -1:
+						rem.append(l)
+				indloc = [ii for j, ii in enumerate(indloc) if j not in rem]
+				indlen = [ii for j, ii in enumerate(indlen) if j not in rem]
 				seqs[ch] = seqs[ch][:indloc[i]] + seqs[ch][(indloc[i]-indlen[i]):]
 				for e in range(len(st[ch])):
 					if st[ch][e] > indloc[i]:
@@ -276,6 +271,7 @@ def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
 						ed[ch][e] = ed[ch][e] + indlen[i]
 				for e in range(i+1,len(indloc)):
 					indloc[e] = indloc[e] + indlen[i]
+			i += 1
 	return(seqs,st,ed)
 
 def find_gauss(g_lg=None, g_cnv_min_len=None, g_cnv_max_len=None, alpha=None, beta=None):
