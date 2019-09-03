@@ -16,7 +16,8 @@ Bam file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http
 * Users now can choose to only randomly replace gap regions (minimum length for defining the gap can be determined by the user), replace all "N"s or doesn't do any replacement.
 * Users now can choose to only avoid gap regions (minimum length for defining the gap can be determined by the user), avoid all "N"s or doesn't avoid any "N"s.
 * The control genome file randomly replaced "N"s/gap regions is now in the output directory with name "control.fa", instead of overwritting the original reference genome file.
-* Modified the functions of SNP simulation.
+* Modified the functions of SNP simulation to increase speed.
+* Bug fixes.
 
 ## Version 2.5 Update (08/21/2019):
 * Added an option to add slack regions up and down stream of target regions to simulate SNPs.
@@ -174,7 +175,7 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 
 ## Outputs
 1. Rearranged genome(s) (fasta)<br>
-Control genome (fasta, if -sc is chosen)<br>
+Control genome <br>
 2. List(s) of CNVs overlapping with target regions (bed)<br>
 List(s) of CNVs outside of target regions (bed)<br>
 3. Target regions for generating short reads for test(s) and control (\*.target_regions_for_gen_short_reads.bed). These rearranged target regions are for read generation ONLY. If don't want to use Wessim, these can be used to extract target sequences and generate short reads by other read simulation tools like ART_illumina (custom codes will be required for this, see [SimulateCNVs v1.0](https://github.com/YJulyXing/SimulateCNVs) which used a custom script to utilize ART_illumina). <strong>For CNV calling, the original target region file in input (2) should be used.</strong><br>
@@ -188,13 +189,13 @@ Bam file(s) and index(es) for control genome (bam and bai, if -sc, -ssr and -sb 
 1. Simulate 10 CNVs overlapping with target regions, and 1 CNV outside of target regions randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with target regions, the overlapping length is not less than 90 bps. CNV start points following Gauss(1, 2) distribution, and lengths follow Beta(2, 5) distribution. Don’t generate CNVs on gap regions. Make 5 test samples and control. Generate short reads (fastq) files by default settings, using paired-end sequencing.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
-                  -e_chr 10 -o_chr 1 -ol 90 -ms gauss -as 1 -bs 2 -ml beta -al 2 -bl 5 -em -n 5 -sc -pr -ssr
+                  -e_chr 10 -o_chr 1 -ol 90 -ms gauss -as 1 -bs 2 -ml beta -al 2 -bl 5 -eN gap -n 5 -sc -pr -ssr
 ```
 
-2. Simulate CNVs overlapping with target regions from a provided CNV list. Simulate approximately 20 CNVs outside of target regions randomly on the whole genome with default settings. Don’t generate CNVs on gap regions. Make a pair of test and control genome.
+2. Simulate CNVs overlapping with target regions from a provided CNV list. Simulate approximately 20 CNVs outside of target regions randomly on the whole genome with default settings. Randomly replace gap regions. Make a pair of test and control genome.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
-                  -e_cnv <list_of_CNV_overlapping_with_exons> -o_tol 20 -em -sc 
+                  -e_cnv <list_of_CNV_overlapping_with_exons> -o_tol 20 -rN gap -sc 
 ```
 
 3.	Simulate approximately 20 CNVs overlapping with target regions on the whole genome, and at least 100 bps between any 2 CNVs. Don’t generate CNVs outside of target regions. Replace gap regions randomly by nucleotides. Paired-end sequencing, with quality offset 35. Make a pair of test and control. The final outputs are BAM files.
@@ -204,9 +205,9 @@ SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -picard <absolute_path_to_picard> -GATK <absolute_path_to_GATK>
 ```
 
-4.	Simulate CNVs overlapping with target regions and outside of target regions from provided files of CNV lengths. If the length between 2 target regions are smaller than 100 bps, connect them as 1 target region. Don’t generate CNVs on gap regions. Make 10 test samples and control. Use paired-end sequencing; sequence 50 bp up and down stream of the target regions (after connecting the target regions) as well. The final output is short reads (fastq) files with 100000 reads.
+4.	Simulate CNVs overlapping with target regions and outside of target regions from provided files of CNV lengths. If the length between 2 target regions are smaller than 100 bps, connect them as 1 target region. Don’t generate CNVs on any "N" regions. Make 10 test samples and control. Use paired-end sequencing; sequence 50 bp up and down stream of the target regions (after connecting the target regions) as well. The final output is short reads (fastq) files with 100000 reads.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -ml user -e_cl <length_file_1> -o_cl <length_file_2> \
-                  -clr 100 -em -n 10 -sc -pr -tf 50 -nr 100000 -ssr 
+                  -clr 100 -eN all -n 10 -sc -pr -tf 50 -nr 100000 -ssr 
 ```
