@@ -63,13 +63,13 @@ def main():
 	group2.add_argument('-ml', dest='method_l', choices=['random','uniform','gauss','beta','user'], default="random", \
 		help='Distribution of CNV length [random]')
 	group2.add_argument('-as', dest='as1', type=float, default=None, \
-		help='Mu for gauss CNV distribution [0]')
+		help='Mu for Gaussian CNV distribution [0]')
 	group2.add_argument('-bs', dest='bs', type=float, default=None, \
-		help='Sigma for gauss CNV distribution [1]')
+		help='Sigma for Gaussian CNV distribution [1]')
 	group2.add_argument('-al', dest='al', type=float, default=None, \
-		help='Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution [0 for gauss distribution, and 2 for beta distribution]')
+		help='Mu (Gaussian distribution) or alpha (Beta distribution) for CNV length distribution [0 for Gaussian distribution, and 0.5 for Beta distribution]')
 	group2.add_argument('-bl', dest='bl', type=float, default=None, \
-		help='Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution [1 for gauss distribution, and 2 for beta distribution]')
+		help='Sigma (Gaussian distribution) or beta (Beta distribution) for CNV length distribution [1 for Gaussian distribution, and 2.3 for Beta distribution]')
 	group2.add_argument('-s_r', dest='s_rate', type=float, default=0, \
 		help='Rate of SNPs in target regions [0]')
 	group2.add_argument('-s_s', dest='s_slack', type=int, default=0, \
@@ -97,8 +97,8 @@ def main():
 	group3.add_argument('-clr', dest='connect_len_between_regions', type=int, default=None, \
 		help='Maximum length bwtween target regions to connect the target regions.')
 	group3.add_argument('-m', dest='model', type=str, \
-		default=os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/ill100v5_p.gzip"), \
-		help='GemSim error model file (.gzip, need absolute path) [ill100v5_p]')
+		default=os.path.join(os.path.dirname(os.path.realpath(__file__)) + "/Illumina_HiSeq_2500_p.gzip"), \
+		help='GemSIM error model file (.gzip, need absolute path) [Illumina_HiSeq_2500_p]')
 
 	group4 = parser.add_argument_group('Arguments for general settings')
 	group4.add_argument('-o', dest='output_dir', type=str, default="simulation_output", \
@@ -112,7 +112,7 @@ def main():
 	group4.add_argument('-ssr', dest='sim_short_reads', action='store_true', \
 		help='Simulate short reads (fastq) files')
 	group4.add_argument('-sb', dest='sim_bam', action='store_true', \
-		help='Simulate bam files')
+		help='Simulate BAM files')
 	group4.add_argument('-picard', dest='path_to_picard', type=str, default=None, \
 		help='Absolute path to picard')
 	group4.add_argument('-GATK', dest='path_to_GATK', type=str, default=None, \
@@ -308,7 +308,7 @@ def main():
 	sys.stdout.flush()
 	print '                      SECNVs (2019)                     '
 	sys.stdout.flush()
-	print '                     Version 2.6  (Aug 2019)                    '
+	print '                     Version 2.7  (Sep 2019)                    '
 	sys.stdout.flush()
 	print '        Bug report: Yue Xing <yue.july.xing@gmail.com>        '
 	sys.stdout.flush()
@@ -316,8 +316,9 @@ def main():
 	sys.stdout.flush()
     
 	log_print('Reading genome file...')
-	iin_seqs, iin_chrs = read_fasta(param['genome_file'], \
-		param['replaceN'], param['gapn'], param['out_dir'])
+	iin_seqs, iin_chrs, iin_ran_m = read_fasta(param['genome_file'], \
+		param['replaceN'], param['gapn'], param['out_dir'], \
+		param['opt'])
 
 	if param['type'] == 'e':
 		log_print('Reading target region file...')
@@ -329,14 +330,14 @@ def main():
 		log_print('Processing the 1st sample and control (if required)...')
 		param['rearranged_out'] = args.rearranged_output_name + "1"
 
-	simulate_WES(param, iin_seqs, iin_chrs, iin_st, iin_ed, args.sim_control, 0)
+	simulate_WES(param, iin_seqs, iin_chrs, iin_st, iin_ed, args.sim_control, 0, iin_ran_m)
 
 	if t > 1:
 	 	for i in range(1,t):
 	 		mess = 'Processing the ' + str(i+1) + 'th sample...'
 	 		log_print(mess)
 	 		param['rearranged_out'] = args.rearranged_output_name + str(i+1)
-			simulate_WES(param, iin_seqs, iin_chrs, iin_st, iin_ed, None, 1)
+			simulate_WES(param, iin_seqs, iin_chrs, iin_st, iin_ed, None, 1, iin_ran_m)
 	
 	#shutil.rmtree(param['tmp_dir'])
 	subprocess.call(['rm', '-rf', param['tmp_dir']], stderr=None)

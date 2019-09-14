@@ -52,7 +52,7 @@ def N_range(N_list):
 	return list(zip(edges, edges))
 
 # Function for read in fasta file
-def read_fasta(fname,rN,m_gapn,out_dir):
+def read_fasta(fname,rN,m_gapn,out_dir,opt):
 	listi=list("ATGC")
 	name = None
 	seqs = {}
@@ -98,7 +98,8 @@ def read_fasta(fname,rN,m_gapn,out_dir):
 			seqs[key] = ''.join(seqs[key])
 	gname = os.path.join(out_dir,'control.fa')
 	write_genome(gname, chrs, seqs)
-	return(seqs, chrs)
+	ran_m = find_missing(opt, chrs, seqs, m_gapn)
+	return(seqs, chrs, ran_m)
 
 def read_cnv(cnvname, chrs):
 	# this file must be pre-sorted!
@@ -717,9 +718,9 @@ def write_targets(targets_file, chrs, w_st, w_ed, seqs, inter, fl):
 	f.close()
 
 # Simulation
-def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, eflag):
+def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, eflag, ein_ran_m):
 	in_out_cn = None
-	in_ran_m = None
+	in_ran_m = copy.deepcopy(ein_ran_m)
 	in_seqs = copy.deepcopy(ein_seqs)
 	in_chrs = list(ein_chrs)
 	in_st = copy.deepcopy(ein_st)
@@ -800,7 +801,6 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 		else:
 			in_cnv_list_st, in_cnv_list_ed, in_cn = read_cnv(in_cnvname, in_chrs)			
 	else:
-		in_ran_m = find_missing(opt, in_chrs, in_seqs, in_gapn)
 		log_print('Generating CNVs overlapping with exons...')
 		in_num_cnv_list, tol, in_cnv_listl = make_num_cnv_list(in_num_cnv, \
 			in_tol_cnv, in_cnv_len_file, in_chrs, in_seqs)
@@ -820,8 +820,6 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 			in_out_cnv_list_st, in_out_cnv_list_ed, in_out_cn = read_cnv(in_out_cnvname, in_chrs)	
 	elif in_tol_cnv_out or in_num_cnv_out or in_cnv_len_file_out:
 		log_print('Generating CNVs outside of exons...')
-		if not in_ran_m:
-			in_ran_m = find_missing(opt, in_chrs, in_seqs, in_gapn)
 		in_num_cnv_out_list, tol_out, in_out_cnv_listl = make_num_cnv_list(in_num_cnv_out, \
 			in_tol_cnv_out, in_cnv_len_file_out, in_chrs, in_seqs)
 		in_out_cnv_list_st, in_out_cnv_list_ed = assign_out_cnv_pos(in_chrs, in_st, in_ed, in_num_cnv_out_list, \
