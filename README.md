@@ -65,6 +65,7 @@ Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs
 
 ## Requirements
 * General use: [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: argparse, random, os, subprocess, math, sys, time, copy, numpy
+* If to use Beta distribution for CNV length, and not using default parameters for Beta distribution, [R](https://www.r-project.org/) can be used to estimate the parameters for Beta distribution using a user-specified set of CNV lengths. (need packages MASS or fitdistrplus)
 * To generate short reads (fastq) outputs (see requirements for [Wessim](http://sak042.github.io/Wessim/): <br>
 &#160;1. [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: bisect, gzip, cPickle, numpy, multiprocessing <br>
 &#160;2. [GemSIM](https://sourceforge.net/projects/gemsim/) error models. The default error model is a Illumina HiSeq 2500 WXS paired end sequencing model made using a modified script of GemSIM. The statistical reports for this error profile is included. Users can also make their own error models using real data by the modified GimSIM script. Scripts for doing so is included. See below for instructions. [Python 2.7](https://www.python.org/download/releases/2.7/) is required for making user-specific error models. Required python packages: sys, getopt, cPickle, gzip, logging, numpy
@@ -191,10 +192,9 @@ Short reads for control genome (fastq, if -sc and -ssr is chosen)
 BAM file(s) and index(es) for control genome (bam and bai, if -sc, -ssr and -sb is chosen)
 
 ## Find parameters for Beta distribution from a set of known CNV lengths using R
-### Find parameters shape1 and shape2
-* x is an vector of CNV lengths, used to estimate parameters for Beta distribution.
 * Use "fitdistr" in MASS library:
 ```
+# x is an vector of CNV lengths, used to estimate parameters for Beta distribution.
 x = c(10,20,30,40,35,25,11,37)
 xs = (x-min(x))/(max(x)-min(x))
 xs = xs[-which.max(x)]
@@ -207,6 +207,7 @@ print(fit)
 
 * Or use "fitdist" in fitdistrplus library:
 ```
+# x is an vector of CNV lengths, used to estimate parameters for Beta distribution.
 x = c(10,20,30,40,35,25,11,37)
 xs = (x-min(x))/(max(x)-min(x))
 xs = xs[-which.max(x)]
