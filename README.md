@@ -41,8 +41,8 @@ BAM file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http
 * Bug fixes.
 
 ## Version 2.1 Update (06/07/2019):
-* Added beta distribution for CNV length. User can define alpha and beta.
-* User can now define mu and sigma for gauss distribution.
+* Added Beta distribution for CNV length. User can define alpha and beta.
+* User can now define mu and sigma for Gaussian distribution.
 * Added feature: SNP simulation.
 * Bug fixes.
 
@@ -137,9 +137,9 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -ms {random,uniform,gauss} | random | Distribution of CNVs | - |
 | -ml {random,uniform,gauss,beta,user} | random | Distribution of CNV length | -ml user must be used with -e_cl and/or -o_cl. If -ml user is used, -min_len and -max_len will be ignored. |
 | -as AS1 | 0 | Mu for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
-| -bs BS | 1 | Sigma for gauss CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
-| -al AL | 0 for gauss distribution, and 0.5 for beta distribution | Mu (gauss distribution) or alpha (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
-| -bl BL | 1 for gauss distribution, and 2.3 for beta distribution | Sigma (gauss distribution) or beta (beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" in R to estimate the value of the parameters.<br> For other choices of -ms and -ml, this parameter will be ignored. |
+| -bs BS | 1 | Sigma for Gaussian CNV distribution | For other choices of -ms and -ml, this parameter will be ignored. |
+| -al AL | 0 for Gaussian distribution, and 0.5 for Beta distribution | Mu (Gaussian distribution) or alpha (Beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" or "fitdist"in [R](https://www.r-project.org/) to estimate the value of the parameters. See below for instructions.<br> For other choices of -ms and -ml, this parameter will be ignored. |
+| -bl BL | 1 for Gaussian distribution, and 2.3 for Beta distribution | Sigma (Gaussian distribution) or beta (Beta distribution) for CNV length distribution | If user has a set of CNV lengths, he/she can use "fitdistr" or "fitdist"in [R](https://www.r-project.org/) to estimate the value of the parameters. See below for instructions.<br> For other choices of -ms and -ml, this parameter will be ignored. |
 | -s_r S_RATE | 0 | Rate of SNPs in target regions | Must be between 0 and 1 |
 | -s_s S_SLACK | 0 | Slack region up and down stream of target regions to simulate SNPs | Must >= 0 |
 | -i_r I_RATE | 0 | Rate of indels in target regions | Must be between 0 and 1 |
@@ -190,6 +190,37 @@ Short reads for control genome (fastq, if -sc and -ssr is chosen)
 6. BAM file(s) and index(es) for rearranged genome(s) (bam and bai, if -ssr and -sb is chosen)<br>
 BAM file(s) and index(es) for control genome (bam and bai, if -sc, -ssr and -sb is chosen)
 
+## Find parameters for Beta distribution from a set of known CNV lengths using R
+### Find parameters shape1 and shape2
+* x is an vector of CNV lengths, used to estimate parameters for Beta distribution.
+* Use "fitdistr" in MASS library:
+```
+x = c(10,20,30,40,35,25,11,37)
+xs = (x-min(x))/(max(x)-min(x))
+xs = xs[-which.max(x)]
+xs = xs[-which.min(x)]
+
+library(MASS)
+fit=fitdistr(xs, "beta", list(shape1 = 0.5, shape2= 0.5))
+print(fit)
+```
+
+* Or use "fitdist" in fitdistrplus library:
+```
+x = c(10,20,30,40,35,25,11,37)
+xs = (x-min(x))/(max(x)-min(x))
+xs = xs[-which.max(x)]
+xs = xs[-which.min(x)]
+
+library(fitdistrplus)
+fit <- fitdist(xs, "beta")
+print(fit)
+# To check fitness:
+plot(fit, las = 1)
+```
+
+* Shape1 is alpha an shape2 is beta, which can be used in Beta distribution in SECNVs.
+
 ## Make user-specific error profiles
 ### To generate error model:
 ``` bash
@@ -213,7 +244,7 @@ python ~/SECNVs/GemSIM/GemStats.py \
 * Use "-p" only when data is paired!
 
 ## Examples
-1. Simulation of 10 CNVs overlapping with target regions, and 1 CNV outside of target regions randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with target regions, the overlapping length is no less than 90 bps. CNV break points follow a Gauss(1, 2) distribution, and CNV lengths follow a Beta(2, 5) distribution. CNVs are not generated in gap regions. A total of 5 test and control samples were built. Short reads (fastq) files are generated using default settings, paired-end sequencing.
+1. Simulation of 10 CNVs overlapping with target regions, and 1 CNV outside of target regions randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with target regions, the overlapping length is no less than 90 bps. CNV break points follow a Gaussian(1, 2) distribution, and CNV lengths follow a Beta(2, 5) distribution. CNVs are not generated in gap regions. A total of 5 test and control samples were built. Short reads (fastq) files are generated using default settings, paired-end sequencing.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -e_chr 10 -o_chr 1 -ol 90 -ms gauss -as 1 -bs 2 -ml beta -al 2 -bl 5 -eN gap -n 5 -sc -pr -ssr
