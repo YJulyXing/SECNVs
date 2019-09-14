@@ -10,12 +10,12 @@
 A tool for simulating CNVs for WES data. It simulates rearranged genomes, short reads (fastq) and bam files automatically in one single command as desired by the user. There are several ways and distributions to choose from to generate desired CNVs.
 Custom codes and algorithms were used to simulate rearranged genomes.
 Short read simulation is based on the modified script of [Wessim1](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3624799/).
-The error model is constructed using [GimSim](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-74).
-Bam file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http://samtools.sourceforge.net/), [picard](https://broadinstitute.github.io/picard/) and [GATK](https://software.broadinstitute.org/gatk/).
+The error model is constructed using [GimSIM](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-74).
+BAM file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http://samtools.sourceforge.net/), [picard](https://broadinstitute.github.io/picard/) and [GATK](https://software.broadinstitute.org/gatk/).
 
 ## Version 2.7 Update (09/14/2019):
 * Updated the default error profile. Now it is Illumina HiSeq 2500 WXS paired end sequencing. The statistical reports for this error profile is also included.
-* Included the modified scripts from [GimSim](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-74) and instructions on how to make user-specific error profiles and generate statistical reports for the error profiles.
+* Included the modified scripts from [GimSIM](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-74) and instructions on how to make user-specific error profiles and generate statistical reports for the error profiles.
 
 ## Version 2.6 Update (08/31/2019):
 * Users now can choose to only randomly replace gap regions (minimum length for defining the gap can be determined by the user), replace all "N"s or doesn't do any replacement.
@@ -67,8 +67,8 @@ Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs
 * General use: [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: argparse, random, os, subprocess, math, sys, time, copy, numpy
 * To generate short reads (fastq) outputs (see requirements for [Wessim](http://sak042.github.io/Wessim/): <br>
 &#160;1. [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: bisect, gzip, cPickle, numpy, multiprocessing <br>
-&#160;2. [GemSim](https://sourceforge.net/projects/gemsim/) error models. The default error model is a Illumina HiSeq 2500 WXS paired end sequencing model. The statistical reports for this error profile is included. Users can also make their own error models using real data by modified GimSim scripts. Instructions and scripts for doing so is included. [Python 2.7](https://www.python.org/download/releases/2.7/) is required for making user-specific error models. Required python packages: sys, getopt, cPickle, gzip, logging, numpy
-* To generate bam outputs: <br>
+&#160;2. [GemSIM](https://sourceforge.net/projects/gemsim/) error models. The default error model is a Illumina HiSeq 2500 WXS paired end sequencing model made using a modified script of GemSIM. The statistical reports for this error profile is included. Users can also make their own error models using real data by the modified GimSIM script. Scripts for doing so is included. See below for instructions. [Python 2.7](https://www.python.org/download/releases/2.7/) is required for making user-specific error models. Required python packages: sys, getopt, cPickle, gzip, logging, numpy
+* To generate BAM outputs: <br>
 &#160;1. [Samtools](http://samtools.sourceforge.net/) <br>
 &#160;2. [BWA](http://bio-bwa.sourceforge.net/) <br>
 &#160;3. [JAVA](https://www.java.com/en/) <br>
@@ -167,9 +167,9 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -rn REARRANGED_OUTPUT_NAME | test | Prefix of the rearranged outputs | Do not include directory name. |
 | -n NUM_SAMPLES | 1 | Number of test samples to be generated | Must be >= 1. |
 | -sc | - | Simulation for control genome | - |
-| -ssr | - | Simulate short reads (fastq) files | If the final output is bam file(s), must first simulate short reads (-ssr) and then bam (-sb). |
-| -sb | - | Simulate bam files | Same as above. |
-| -picard PATH_TO_PICARD | - | Absolute path to picard | If the final output is bam file(s) (using -ssr and -sb), must provide absolute paths to picard and GATK. |
+| -ssr | - | Simulate short reads (fastq) files | If the final output is BAM file(s), must first simulate short reads (-ssr) and then BAM (-sb). |
+| -sb | - | Simulate BAM files | Same as above. |
+| -picard PATH_TO_PICARD | - | Absolute path to picard | If the final output is BAM file(s) (using -ssr and -sb), must provide absolute paths to picard and GATK. |
 | -GATK PATH_TO_GATK | - | Absolute path to GATK | Same as above. |
 
 ## Inputs
@@ -187,8 +187,30 @@ List(s) of CNVs outside of target regions (bed)<br>
 4. Short reads for rearranged genome(s) (fastq, if -ssr is chosen)<br>
 Short reads for control genome (fastq, if -sc and -ssr is chosen)
 5. Indexes for the control genome (.dict, .fai, .sa, etc., if -ssr and -sb is chosen and no indexes exist in the output directory)
-6. Bam file(s) and index(es) for rearranged genome(s) (bam and bai, if -ssr and -sb is chosen)<br>
-Bam file(s) and index(es) for control genome (bam and bai, if -sc, -ssr and -sb is chosen)
+6. BAM file(s) and index(es) for rearranged genome(s) (bam and bai, if -ssr and -sb is chosen)<br>
+BAM file(s) and index(es) for control genome (bam and bai, if -sc, -ssr and -sb is chosen)
+
+## Make user-specific error profiles
+### To generate error model:
+``` bash
+python ~/SECNVs/GemSIM/GemErrxy.py \
+      -r <maximium read length> \
+      -f <reference genome (fasta)> \
+      -s <SAM file for making error model with> \
+      -n <prefix of error model> \
+      -p
+```
+* Use "-p" only when data is paired!
+* For extra options, see GimSIM manual
+
+### To generate statistical reports:
+``` bash
+python ~/SECNVs/GemSIM/GemStats.py \
+      -m <error model file name> \
+      -n <prefix of the reports> \
+      -p
+```
+* Use "-p" only when data is paired!
 
 ## Examples
 1. Simulation of 10 CNVs overlapping with target regions, and 1 CNV outside of target regions randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with target regions, the overlapping length is no less than 90 bps. CNV break points follow a Gauss(1, 2) distribution, and CNV lengths follow a Beta(2, 5) distribution. CNVs are not generated in gap regions. A total of 5 test and control samples were built. Short reads (fastq) files are generated using default settings, paired-end sequencing.
