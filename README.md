@@ -10,7 +10,7 @@
 A tool for simulating CNVs for WES data. It simulates rearranged genomes, short reads (fastq) and bam files automatically in one single command as desired by the user. There are several ways and distributions to choose from to generate desired CNVs.
 Custom codes and algorithms were used to simulate rearranged genomes.
 Short read simulation is based on the modified script of [Wessim1](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3624799/).
-The error model is constructed using [GimSIM](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-74).
+The error model is constructed using a modified script of [GimSIM](https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-74).
 BAM file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http://samtools.sourceforge.net/), [picard](https://broadinstitute.github.io/picard/) and [GATK](https://software.broadinstitute.org/gatk/).
 
 ## Version 2.7 Update (09/14/2019):
