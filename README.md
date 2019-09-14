@@ -158,7 +158,7 @@ usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
 | -pr | - | Select if paired-end sequencing | For paired-end sequencing, must use the option -pr. If using single-end sequencing, mean fragment size (-fs) and standard deviation of fragment size (-s) will be ignored. |
 | -q QUALITY_SCORE_OFFSET | 33 | Quality score offset for short reads simulation | - |
 | -clr CONNECT_LEN_BETWEEN_REGIONS | - | Maximum length bwtween target regions to connect the target regions | -tf takes place after -clr (target regions are first connected per request of the user, and then flanking regions up and down stream of target regions are included for sequencing). It is recommended to use -tf and -clr if target regions are very small and fragment size and read length are relatively large. |
-| -m MODEL | ill100v5_p | GemSim error model file (.gzip, need absolute path) | - |
+| -m MODEL | Illumina_HiSeq_2500_p | GemSIM error model file (.gzip, need absolute path) | - |
 
 #### Arguments for general settings:
 
