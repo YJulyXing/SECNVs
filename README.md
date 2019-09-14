@@ -67,7 +67,7 @@ Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs
 * General use: [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: argparse, random, os, subprocess, math, sys, time, copy, numpy
 * To generate short reads (fastq) outputs (see requirements for [Wessim](http://sak042.github.io/Wessim/): <br>
 &#160;1. [Python 2.7](https://www.python.org/download/releases/2.7/). Required python packages: bisect, gzip, cPickle, numpy, multiprocessing <br>
-&#160;2. [GemSim](https://sourceforge.net/projects/gemsim/) error models. The default error model is a Illumina HiSeq 2500 WXS paired end sequencing model. The statistical reports for this error profile is included. Users can also make their own error models using real data. Instructions for doing so is included. [Python 2.7](https://www.python.org/download/releases/2.7/) is required for making user-specific error models. Required python packages: sys, getopt, cPickle, gzip, logging, numpy
+&#160;2. [GemSim](https://sourceforge.net/projects/gemsim/) error models. The default error model is a Illumina HiSeq 2500 WXS paired end sequencing model. The statistical reports for this error profile is included. Users can also make their own error models using real data by modified GimSim scripts. Instructions and scripts for doing so is included. [Python 2.7](https://www.python.org/download/releases/2.7/) is required for making user-specific error models. Required python packages: sys, getopt, cPickle, gzip, logging, numpy
 * To generate bam outputs: <br>
 &#160;1. [Samtools](http://samtools.sourceforge.net/) <br>
 &#160;2. [BWA](http://bio-bwa.sourceforge.net/) <br>
