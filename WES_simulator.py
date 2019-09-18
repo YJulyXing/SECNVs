@@ -208,6 +208,7 @@ def make_snps(n_seqs,chrs,rate,st,ed,sslack):
 		ran = []
 		for s in range(len(st[ch])):
 			ran += range(st[ch][s]-sslack,ed[ch][s]+1+sslack)
+		ran = list(set(ran))
 		snploc = random.sample(ran, int(len(ran)*rate))
 		mes = "SNP number on " + ch + ":" + str(len(snploc))
 		log_print(mes)
@@ -232,6 +233,7 @@ def make_indels(n_seqs,chrs,i_rate,i_mlen,n_st,n_ed):
 		ran = []
 		for s in range(len(st[ch])):
 			ran += range(st[ch][s],ed[ch][s]+1)
+		ran = list(set(ran))
 		indloc = random.sample(ran, int(len(ran)*i_rate))
 		mes = "Indel number on " + ch + ":" + str(len(indloc))
 		log_print(mes)
