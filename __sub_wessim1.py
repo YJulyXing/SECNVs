@@ -227,21 +227,18 @@ def main(argv):
 				p1='*'
 			head1='@'+'r'+str(i)+'_from_'+ p1 + ":" + p2 + " 1:N:0:1"
 			head2='@'+'r'+str(i)+'_from_'+ p1 + ":" + p2 + " 2:N:0:1"
-		try:
-			wread.write(head1 + '\n')
-			wread.write(read1.upper()+'\n')
-			wread.write('+\n')
-			wread.write(quals1+'\n')
-		except Exception:
-			pass
+
+		wread.write(head1 + '\n')
+		wread.write(read1.upper()+'\n')
+		wread.write('+\n')
+		wread.write(quals1+'\n')
+
 		if paired:
-			try:
-				wread2.write(head2 + "\n")
-				wread2.write(read2.upper() + "\n")
-				wread2.write("+\n")
-				wread2.write(quals2 + "\n")
-			except Exception:
-				pass
+			wread2.write(head2 + "\n")
+			wread2.write(read2.upper() + "\n")
+			wread2.write("+\n")
+			wread2.write(quals2 + "\n")
+
 		count +=1
 		i+=1
 		if count % 1000000 == 0 and count!=0:
