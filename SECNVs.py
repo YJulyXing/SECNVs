@@ -76,7 +76,7 @@ def main():
 		help='Slack region up and down stream of target regions to simulate SNPs [0]')
 	group2.add_argument('-i_r', dest='i_rate', type=float, default=0, \
 		help='Rate of indels in target regions [0]')
-	group2.add_argument('-i_mlen', dest='i_max_len', type=float, default=50, \
+	group2.add_argument('-i_mlen', dest='i_max_len', type=int, default=50, \
 		help='The Maximum length of indels in target regions [50]. (If a deletion is equal or larger than the length of the target region it is in, the length of the deletion will be changed to (length of the target region it is in) - 1.)')
 	
 	group3 = parser.add_argument_group('Arguments for simulating short reads (fastq)')
