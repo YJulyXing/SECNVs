@@ -11,6 +11,7 @@ import copy
 from numpy.random import choice as choices
 
 from WES_simulator import *
+from snp_rate import *
 
 def main():
 	parser = argparse.ArgumentParser(description='Simulator for WES or WGS data', \
@@ -28,24 +29,24 @@ def main():
 		help='Exclude sequences of "N"s for CNV simulation? [none]')
 	group2.add_argument('-n_gap', dest='num_N_for_gaps', type=int, default = 50, \
 		help='Number of consecutive "N"s to be considered a gap region [50]')
-	group2.add_argument('-e_cnv', dest='exon_cnv_list', type=str, default=None, \
-		help='A user-defined list of CNVs overlapping with exons')
-	group2.add_argument('-e_chr', dest='exon_cnv_chr', type=int, default = None, \
-		help='Number of CNVs overlapping with exons to be generated on each chromosome')
-	group2.add_argument('-e_tol', dest='exon_cnv_tol', type=int, default = None, \
-		help='Total number of CNVs overlapping with exons to be generated across the genome (estimate)')
-	group2.add_argument('-e_cl', dest='exon_cnv_len_file', type=str, default=None, \
-		help='User supplied file of CNV length for CNVs overlapping with exons')
+	group2.add_argument('-e_cnv', dest='target_cnv_list', type=str, default=None, \
+		help='A user-defined list of CNVs overlapping with target regions')
+	group2.add_argument('-e_chr', dest='target_cnv_chr', type=int, default = None, \
+		help='Number of CNVs overlapping with target regions to be generated on each chromosome')
+	group2.add_argument('-e_tol', dest='target_cnv_tol', type=int, default = None, \
+		help='Total number of CNVs overlapping with target regions to be generated across the genome (estimate)')
+	group2.add_argument('-e_cl', dest='target_cnv_len_file', type=str, default=None, \
+		help='User supplied file of CNV length for CNVs overlapping with target regions')
 	group2.add_argument('-o_cnv', dest='out_cnv_list', type=str, default=None, \
-		help='A user-defined list of CNVs outside of exons')
+		help='A user-defined list of CNVs outside of target regions')
 	group2.add_argument('-o_chr', dest='out_cnv_chr', type=int, default = None, \
-		help='Number of CNVs outside of exons to be generated on each chromosome')
+		help='Number of CNVs outside of target regions to be generated on each chromosome')
 	group2.add_argument('-o_tol', dest='out_cnv_tol', type=int, default = None, \
-		help='Total number of CNVs outside of exons to be generated across the genome (estimate)')
+		help='Total number of CNVs outside of target regions to be generated across the genome (estimate)')
 	group2.add_argument('-o_cl', dest='out_cnv_len_file', type=str, default=None, \
-		help='User supplied file of CNV length for CNVs outside of exons')
+		help='User supplied file of CNV length for CNVs outside of target regions')
 	group2.add_argument('-ol', dest='overlap_bps', type=int, default = 100, \
-		help='For each CNV overlapping with exons, number of minimum overlapping bps [100]')
+		help='For each CNV overlapping with target regions, number of minimum overlapping bps [100]')
 	group2.add_argument('-min_len', dest='cnv_min_length', type=int, default=1000, \
 		help='Minimum CNV length [1000]')
 	group2.add_argument('-max_len', dest='cnv_max_length', type=int, default=100000, \
@@ -138,11 +139,11 @@ def main():
 	param['min_cn'] = args.min_copy_number
 	param['max_cn'] = args.max_copy_number
 	param['p_ins'] = args.proportion_ins
-	param['e_cnv_list'] = args.exon_cnv_list
+	param['e_cnv_list'] = args.target_cnv_list
 	param['o_cnv_list'] = args.out_cnv_list
 	param['out_dir'] = os.path.join(os.getcwd(), args.output_dir)
-	param['e_cnv_chr'] = args.exon_cnv_chr
-	param['e_cnv_tol'] = args.exon_cnv_tol
+	param['e_cnv_chr'] = args.target_cnv_chr
+	param['e_cnv_tol'] = args.target_cnv_tol
 	param['o_cnv_chr'] = args.out_cnv_chr
 	param['o_cnv_tol'] = args.out_cnv_tol
 	param['overlap_bp'] = args.overlap_bps
@@ -162,7 +163,7 @@ def main():
 	param['path_to_GATK'] = args.path_to_GATK
 	param['method_s'] = args.method_s
 	param['method_l'] = args.method_l
-	param['e_cnv_len_file'] = args.exon_cnv_len_file
+	param['e_cnv_len_file'] = args.target_cnv_len_file
 	param['o_cnv_len_file'] = args.out_cnv_len_file
 	param['opt'] = args.exclude_Ns
 	param['gapn'] = args.num_N_for_gaps
@@ -271,9 +272,9 @@ def main():
 			exit(1)
 
 		if param['e_cnv_list']:
-			log_print('Warning: A list of CNVs overlapping with exons are provided. -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs on this list!')
+			log_print('Warning: A list of CNVs overlapping with target regions are provided. -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs on this list!')
 		if param['o_cnv_list']:
-			log_print('Warning: A list of CNVs outside of exons are provided. -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs on this list!')
+			log_print('Warning: A list of CNVs outside of target regions are provided. -em, -f, -ms, -ml, -ol, -min_cn, -max_cn, -min_len and -max_len will be ignored for CNVs on this list!')
 
 
 		if param['method_l'] == 'user':
@@ -282,7 +283,7 @@ def main():
 				log_print('Error: "-ml user" must be used with -e_cl!')
 				exit(1)
 			if o_ct == 1 and not param['o_cnv_len_file']:
-				log_print('Error: If CNVs outside of exons are to be generated, "-ml user" must be used with -o_cl!')
+				log_print('Error: If CNVs outside of target regions are to be generated, "-ml user" must be used with -o_cl!')
 				exit(1)
 		else:
 			if param['e_cnv_len_file']:

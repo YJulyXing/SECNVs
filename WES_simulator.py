@@ -10,6 +10,8 @@ import time
 import copy
 from numpy.random import choice as choices
 
+from snp_rate import *
+
 # Function for read in target region file
 def read_target(tname, chrs):
 	st = {}
@@ -186,16 +188,6 @@ def find_missing(m_opt, m_chrs, m_seqs, m_gapn):
 					if nran[i][1] - nran[i][0] + 1 < m_gapn:
 						ms[ch] = [e for e in ms[ch] if e not in list(range(nran[i][0], nran[i][1]+1))]
 	return ms
-
-def switch_nt(nt):
-	switcher = {
-		"A": list(choices(["C","T","G"],1,p=[0.14, 0.04, 0.82])),
-		"T": list(choices(["C","A","G"],1,p=[0.84, 0.03, 0.13])),
-		"G": list(choices(["C","A","T"],1,p=[0.19, 0.7, 0.11])),
-		"C": list(choices(["G","A","T"],1,p=[0.17, 0.12, 0.71])),
-		"N": ["N"]
-	}
-	return switcher.get(nt, "N")
 
 def make_snps(n_seqs,chrs,rate,st,ed,sslack):
 	mes = "Making SNPs..."
@@ -456,7 +448,7 @@ def assign_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 		mes = "Generated " + str(count) + " CNV(s) on chromosome " + str(ch) + "."
 		log_print(mes)
 		tol_cnv = tol_cnv + count		
-	mes = "Total CNV(s) overlapping with exons generated: " + str(tol_cnv)
+	mes = "Total CNV(s) overlapping with target regions generated: " + str(tol_cnv)
 	log_print(mes)
 	return(cnv_list_st, cnv_list_ed)
 
@@ -563,7 +555,7 @@ def assign_out_cnv_pos(chrs, st, ed, num_cnv_list, cnv_min_len, cnv_max_len, \
 		mes = "Generated " + str(count) + " CNV(s) on chromosome " + str(ch) + "."
 		log_print(mes)
 		tol_cnv = tol_cnv + count
-	mes = "Total CNV(s) outside of exons generated: " + str(tol_cnv)
+	mes = "Total CNV(s) outside of target regions generated: " + str(tol_cnv)
 	log_print(mes)
 	return(cnv_list_st, cnv_list_ed)
 
@@ -744,8 +736,8 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 	in_p_ins = sim_params['p_ins'] 
 	in_min_cn = sim_params['min_cn']
 	in_max_cn = sim_params['max_cn']
-	in_cnv_list_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".cnv.overlap_exon.bed")
-	in_cnv_out_list_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".cnv.out_of_exon.bed")
+	in_cnv_list_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".cnv.overlap_target.bed")
+	in_cnv_out_list_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".cnv.out_of_target.bed")
 	out_cnv_targets_file = os.path.join(sim_params['out_dir'], sim_params['rearranged_out']+".target_regions_for_gen_short_reads.bed")
 	rearranged_out_name = os.path.join(sim_params['out_dir'], sim_params['rearranged_out'])
 	control_out_name = os.path.join(sim_params['out_dir'], 'control')
@@ -793,17 +785,17 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 		# If #CNVs given for each chromosome, #CNVs on each chromosome is 
 		# the same
 	
-	# Generate CNVs overlapping with exons and not overlapping with exons
+	# Generate CNVs overlapping with target regions and not overlapping with target regions
 	# for CNVs overlapping with target regions
 	if in_cnvname:
-		log_print('Reading CNVs overlapping with exons from provided file...')
+		log_print('Reading CNVs overlapping with target regions from provided file...')
 		if not os.path.exists(in_cnvname):
 			log_print('Error: The provided CNV list does not exist!')
 			exit(1)
 		else:
 			in_cnv_list_st, in_cnv_list_ed, in_cn = read_cnv(in_cnvname, in_chrs)			
 	else:
-		log_print('Generating CNVs overlapping with exons...')
+		log_print('Generating CNVs overlapping with target regions...')
 		in_num_cnv_list, tol, in_cnv_listl = make_num_cnv_list(in_num_cnv, \
 			in_tol_cnv, in_cnv_len_file, in_chrs, in_seqs)
 		in_cnv_list_st, in_cnv_list_ed = assign_cnv_pos(in_chrs, in_st, in_ed, in_num_cnv_list, \
@@ -814,14 +806,14 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 
 	# for CNVs not overlapping with target regions (optional)
 	if in_out_cnvname:
-		log_print('Reading CNVs outside of exons from provided file...')
+		log_print('Reading CNVs outside of target regions from provided file...')
 		if not os.path.exists(in_out_cnvname):
 			log_print('Error: The provided CNV list does not exist!')
 			exit(1)
 		else:
 			in_out_cnv_list_st, in_out_cnv_list_ed, in_out_cn = read_cnv(in_out_cnvname, in_chrs)	
 	elif in_tol_cnv_out or in_num_cnv_out or in_cnv_len_file_out:
-		log_print('Generating CNVs outside of exons...')
+		log_print('Generating CNVs outside of target regions...')
 		in_num_cnv_out_list, tol_out, in_out_cnv_listl = make_num_cnv_list(in_num_cnv_out, \
 			in_tol_cnv_out, in_cnv_len_file_out, in_chrs, in_seqs)
 		in_out_cnv_list_st, in_out_cnv_list_ed = assign_out_cnv_pos(in_chrs, in_st, in_ed, in_num_cnv_out_list, \
@@ -833,10 +825,10 @@ def simulate_WES(sim_params, ein_seqs, ein_chrs, ein_st, ein_ed, sim_control, ef
 
 	# write CNV lists into files
 	if not in_cnvname:
-		log_print('Writing CNVs overlapping with exons to file...')
+		log_print('Writing CNVs overlapping with target regions to file...')
 		write_cnv(in_chrs, in_cnv_list_file, in_cnv_list_st, in_cnv_list_ed, in_cn)
 	if in_out_cn and (not in_out_cnvname):
-		log_print('Writing CNVs outside of exons to file...')
+		log_print('Writing CNVs outside of target regions to file...')
 		write_cnv(in_chrs, in_cnv_out_list_file, in_out_cnv_list_st, in_out_cnv_list_ed, in_out_cn)
 	
 	# Generate rearranged genome
