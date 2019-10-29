@@ -253,10 +253,10 @@ python ~/SECNVs/GemSIM/GemStats.py \
 "G": list(choices(["C","A","T"],1,p=[0.19, 0.7, 0.11])),
 "C": list(choices(["G","A","T"],1,p=[0.17, 0.12, 0.71])),
 ```
-The mutation rate from "A" to "C", "T" or "G" are the first, second and third numbers in p=[0.14, 0.04, 0.82] on "A" line, respectively. Change these numbers according to your need.
-The mutation rate from "T" to "C", "A" or "G" are the first, second and third numbers in p=[0.84, 0.03, 0.13] on "T" line, respectively. Change these numbers according to your need.
-The mutation rate from "G" to "C", "A" or "T" are the first, second and third numbers in p=[0.19, 0.7, 0.11] on "G" line, respectively. Change these numbers according to your need.
-The mutation rate from "C" to "G", "A" or "T" are the first, second and third numbers in p=[0.17, 0.12, 0.71] on "C" line, respectively. Change these numbers according to your need.
+  * The mutation rate from "A" to "C", "T" or "G" are the first, second and third numbers in p=[0.14, 0.04, 0.82] on "A" line, respectively. Change these numbers according to your need.
+  * The mutation rate from "T" to "C", "A" or "G" are the first, second and third numbers in p=[0.84, 0.03, 0.13] on "T" line, respectively. Change these numbers according to your need.
+  * The mutation rate from "G" to "C", "A" or "T" are the first, second and third numbers in p=[0.19, 0.7, 0.11] on "G" line, respectively. Change these numbers according to your need.
+  * The mutation rate from "C" to "G", "A" or "T" are the first, second and third numbers in p=[0.17, 0.12, 0.71] on "C" line, respectively. Change these numbers according to your need.
 3. Save "snp_rate.py".
 
 ## Examples
