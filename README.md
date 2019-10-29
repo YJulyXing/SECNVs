@@ -80,9 +80,9 @@ Or manually download the source codes [here](https://github.com/YJulyXing/SECNVs
 ``` bash
 usage: SECNVs.py [-h] -G GENOME_FILE -T TARGET_REGION_FILE
                  [-rN {none,gap,all}] [-eN {none,gap,all}]
-                 [-n_gap NUM_N_FOR_GAPS] [-e_cnv EXON_CNV_LIST]
-                 [-e_chr EXON_CNV_CHR] [-e_tol EXON_CNV_TOL]
-                 [-e_cl EXON_CNV_LEN_FILE] [-o_cnv OUT_CNV_LIST]
+                 [-n_gap NUM_N_FOR_GAPS] [-e_cnv TARGET_CNV_LIST]
+                 [-e_chr TARGET_CNV_CHR] [-e_tol TARGET_CNV_TOL]
+                 [-e_cl TARGET_CNV_LEN_FILE] [-o_cnv OUT_CNV_LIST]
                  [-o_chr OUT_CNV_CHR] [-o_tol OUT_CNV_TOL]
                  [-o_cl OUT_CNV_LEN_FILE] [-ol OVERLAP_BPS]
                  [-min_len CNV_MIN_LENGTH] [-max_len CNV_MAX_LENGTH]
@@ -244,20 +244,35 @@ python ~/SECNVs/GemSIM/GemStats.py \
 ```
 * Use "-p" only when data is paired!
 
+## Change SNP mutation rate
+1. Open "snp_rate.py".
+2. On line 14-18, find:
+``` bash
+"A": list(choices(["C","T","G"],1,p=[0.14, 0.04, 0.82])),
+"T": list(choices(["C","A","G"],1,p=[0.84, 0.03, 0.13])),
+"G": list(choices(["C","A","T"],1,p=[0.19, 0.7, 0.11])),
+"C": list(choices(["G","A","T"],1,p=[0.17, 0.12, 0.71])),
+```
+The mutation rate from "A" to "C", "T" or "G" are the first, second and third numbers in p=[0.14, 0.04, 0.82] on "A" line, respectively. Change these numbers according to your need.
+The mutation rate from "T" to "C", "A" or "G" are the first, second and third numbers in p=[0.84, 0.03, 0.13] on "T" line, respectively. Change these numbers according to your need.
+The mutation rate from "G" to "C", "A" or "T" are the first, second and third numbers in p=[0.19, 0.7, 0.11] on "G" line, respectively. Change these numbers according to your need.
+The mutation rate from "C" to "G", "A" or "T" are the first, second and third numbers in p=[0.17, 0.12, 0.71] on "C" line, respectively. Change these numbers according to your need.
+3. Save "snp_rate.py".
+
 ## Examples
-1. Simulation of 10 CNVs overlapping with target regions, and 1 CNV outside of target regions randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with target regions, the overlapping length is no less than 90 bps. CNV break points follow a Gaussian(1, 2) distribution, and CNV lengths follow a Beta(2, 5) distribution. CNVs are not generated in gap regions. A total of 5 test and control samples were built. Short reads (fastq) files are generated using default settings, paired-end sequencing.
+1. Simulate 10 CNVs overlapping with target regions, and 1 CNV outside of target regions randomly on each chromosome using default lengths, copy numbers, minimum distance between each of the 2 CNVs and proportion of insertions. For each CNV overlapping with target regions, the overlapping length is no less than 90 bps. CNV break points follow a Gaussian(1, 2) distribution, and CNV lengths follow a Beta(2, 5) distribution. CNVs are not generated in gaps. A total of 5 test and control samples are built. Short reads (fastq) files are generated using default settings, paired-end sequencing.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -e_chr 10 -o_chr 1 -ol 90 -ms gauss -as 1 -bs 2 -ml beta -al 2 -bl 5 -eN gap -n 5 -sc -pr -ssr
 ```
 
-2. Simulation of CNVs overlapping with target regions from a provided CNV list. Twenty CNVs are simulated outside of target regions randomly on the whole genome with default settings. CNVs were not generated on any stretches of "N"s. A pair of test and control genome was built.
+2. Simulate CNVs overlapping with target regions from a provided CNV list. Twenty CNVs are to be simulated outside of target regions randomly on the whole genome with default settings. CNVs are not to be generated on any stretches of "N"s. A pair of test and control genome are built.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
-                  -e_cnv <list_of_CNV_overlapping_with_exons> -o_tol 20 -eN all -sc 
+                  -e_cnv <list_of_CNV_overlapping_with_target_regions> -o_tol 20 -eN all -sc
 ```
 
-3.	Simulation of 20 CNVs overlapping with target regions on the whole genome, and at least 100 bps between any 2 CNVs. CNVs were not generated outside of target regions. Gap regions (50 or more consecutive "N"s) were replaced by random nucleotides. SNP rate is 0.001 and indel rate is 0.00001. The maximum indel length is 100 bps. Paired-end sequencing with quality offset 35 is then produced. A pair of test and control genomes was built. BAM files are generated.
+3.	Simulate 20 CNVs overlapping with target regions on the whole genome, and have at least 100 bps between any 2 CNVs. CNVs are not generated outside of target regions. Gaps (50 or more consecutive "N"s) are replaced by random nucleotides. SNP rate is 0.001 and indel rate is 0.00001, and the maximum indel length is 100 bps. Paired-end sequencing reads with quality offset 35 are then produced. For a pair of test and control genomes BAM files are generated.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -e_tol 20 -f 100 -rN gap -sc -pr -q 35 -ssr -sb \
@@ -265,7 +280,7 @@ SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -picard <absolute_path_to_picard> -GATK <absolute_path_to_GATK>
 ```
 
-4.	Simulation of CNVs overlapping with target regions and outside of target regions from provided files of CNV lengths. Combined single regions are formed from two or more regions originally separated by less than 100 bps. CNVs are not generated on gap regions (60 or more consecutive "N"s). A total of 10 test and control samples were built. The paired-end sequencing includes sequences 50 bp up- and downstream of the target regions. The final output consists of short reads (fastq) files with 100,000 reads.
+4.	Simulate CNVs overlapping with target regions and outside of target regions from provided files of CNV lengths. Combined single regions are formed from two or more regions originally separated by less than 100 bps. CNVs are not generated on gaps (60 or more consecutive "N"s). A total of 10 test and control samples are built. The paired-end sequencing must include sequences 50 bp upstream and downstream of the target regions. The final output consists of short reads (fastq) files with 100,000 reads.
 ``` bash
 SECNVs/SECNVs.py -G <input_fasta> -T <target_region> -o <output_dir> \
                   -ml user -e_cl <length_file_1> -o_cl <length_file_2> \
