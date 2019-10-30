@@ -309,7 +309,7 @@ def main():
 	sys.stdout.flush()
 	print '                      SECNVs (2019)                     '
 	sys.stdout.flush()
-	print '                     Version 2.7  (Sep 2019)                    '
+	print '                     Version 2.7.1  (Oct 2019)                    '
 	sys.stdout.flush()
 	print '        Bug report: Yue Xing <yue.july.xing@gmail.com>        '
 	sys.stdout.flush()
