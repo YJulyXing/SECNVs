@@ -58,6 +58,10 @@ BAM file generation uses [BWA](http://bio-bwa.sourceforge.net/), [samtools](http
 
 ## For the old version SimulateCNVs 1.0, please click [here](https://yjulyxing.github.io/).
 
+## Citation
+
+Please cite: Xing Y, Dabney AR, Li X, Wang G, Gill CA and Casola C (2020) SECNVs: A Simulator of Copy Number Variants and Whole-Exome Sequences From Reference Genomes. Front. Genet. 11:82. doi: 10.3389/fgene.2020.00082.
+
 ## Installation
 No installation required. Simply type the following and it will be ready to use:
 ``` bash
